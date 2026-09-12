@@ -1,0 +1,2269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="manifest" href="manifest.json" />
+<title>JEE Command Center</title>
+<style>
+  :root{
+    --bg:#F7F4ED;
+    --surface:#FFFFFF;
+    --surface-2:#FBF8F2;
+    --surface-3:#F1ECE0;
+    --border:#E8E1D2;
+    --ink:#2B2822;
+    --ink-soft:#726B5C;
+    --ink-faint:#A39C89;
+    --accent:#D97757;
+    --accent-hover:#C4643F;
+    --accent-soft:rgba(217,119,87,.12);
+    --accent-soft-strong:rgba(217,119,87,.22);
+    --sage:#6E8F5C;
+    --sage-soft:rgba(110,143,92,.14);
+    --ochre:#B8862E;
+    --ochre-soft:rgba(184,134,46,.14);
+    --rust:#B5573B;
+    --rust-soft:rgba(181,87,59,.13);
+    --topbar-bg:rgba(247,244,237,.9);
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
+    --shadow:0 1px 2px rgba(43,40,34,.04), 0 10px 24px -14px rgba(43,40,34,.12);
+    --font-serif:Georgia,'Iowan Old Style','Palatino Linotype','Book Antiqua',serif;
+    --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --bg:#242422;
+    --surface:#2D2D2A;
+    --surface-2:#282826;
+    --surface-3:#3A3A36;
+    --border:#454440;
+    --ink:#F3F1E9;
+    --ink-soft:#B7B1A2;
+    --ink-faint:#867F70;
+    --accent:#E0895F;
+    --accent-hover:#EC9E77;
+    --accent-soft:rgba(224,137,95,.16);
+    --accent-soft-strong:rgba(224,137,95,.28);
+    --sage:#8FB37D;
+    --sage-soft:rgba(143,179,125,.16);
+    --ochre:#D6AC5C;
+    --ochre-soft:rgba(214,172,92,.16);
+    --rust:#DA8567;
+    --rust-soft:rgba(218,133,103,.16);
+    --topbar-bg:rgba(36,36,34,.88);
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 24px -14px rgba(0,0,0,.55);
+  }
+  :root[data-theme="amoled"]{
+    --bg:#000000;
+    --surface:#0A0A0A;
+    --surface-2:#0D0D0D;
+    --surface-3:#161616;
+    --border:#242424;
+    --ink:#FFFFFF;
+    --ink-soft:#B3B3B3;
+    --ink-faint:#696969;
+    --accent:#FF6B4A;
+    --accent-hover:#FF8566;
+    --accent-soft:rgba(255,107,74,.16);
+    --accent-soft-strong:rgba(255,107,74,.28);
+    --sage:#7FD87F;
+    --sage-soft:rgba(127,216,127,.16);
+    --ochre:#FFD700;
+    --ochre-soft:rgba(255,215,0,.16);
+    --rust:#FF6B6B;
+    --rust-soft:rgba(255,107,107,.16);
+    --topbar-bg:rgba(0,0,0,.92);
+    --shadow:0 1px 3px rgba(0,0,0,.8), 0 10px 24px -14px rgba(0,0,0,.95);
+  }
+  body, .card, .field, .panel, .sidebar, .topbar, .chapter, .test-row, .log-row, .todo-row{
+    transition:background-color .18s ease, border-color .18s ease, color .18s ease;
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--font-sans);
+    -webkit-font-smoothing:antialiased; font-size:14px; line-height:1.5;
+  }
+  h1,h2,h3{ font-family:var(--font-serif); font-weight:600; color:var(--ink); margin:0; }
+  ::selection{ background:var(--accent-soft-strong); }
+  button{ font-family:inherit; }
+  input,select,textarea{ font-family:inherit; }
+
+  .icon{ width:16px; height:16px; flex-shrink:0; }
+  .icon-lg{ width:22px; height:22px; }
+
+  /* ---------- shell ---------- */
+  .app{ display:flex; min-height:100vh; align-items:stretch; }
+
+  .sidebar{
+    width:236px; flex-shrink:0; border-right:1px solid var(--border);
+    padding:26px 16px; display:flex; flex-direction:column; gap:26px;
+    position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; padding:0 6px; }
+  .brand-mark{
+    width:34px; height:34px; border-radius:10px; background:var(--accent);
+    display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+  }
+  .brand-text h1{ font-size:16px; line-height:1.25; }
+  .brand-text p{ margin:2px 0 0; font-size:11.5px; color:var(--ink-faint); }
+
+  .nav{ display:flex; flex-direction:column; gap:2px; }
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:var(--radius-sm);
+    color:var(--ink-soft); font-size:13.5px; cursor:pointer; border:none; background:none;
+    text-align:left; width:100%; transition:background-color .12s, color .12s;
+  }
+  .nav-item:hover{ background:var(--surface-3); color:var(--ink); }
+  .nav-item.active{ background:var(--accent-soft); color:var(--accent-hover); font-weight:600; }
+
+  .sidebar-foot{ margin-top:auto; }
+  .brand{ position:relative; }
+
+  .settings-trigger{
+    margin-left:auto; position:relative; color:var(--ink-faint);
+    transition:background-color .15s ease, color .15s ease;
+  }
+  .settings-trigger[aria-expanded="true"]{
+    background:var(--accent-soft); color:var(--accent-hover);
+  }
+  .topbar-settings-btn{ margin-left:auto; color:var(--ink-faint); transition:background-color .15s ease, color .15s ease; }
+  .topbar-settings-btn[aria-expanded="true"]{ background:var(--accent-soft); color:var(--accent-hover); }
+
+  .settings-panel{
+    position:fixed; z-index:100; width:min(308px, calc(100vw - 32px));
+    top:var(--settings-top, 72px); left:var(--settings-left, auto); right:var(--settings-right, 24px);
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md);
+    box-shadow:var(--shadow); padding:16px; display:none;
+    opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right;
+    pointer-events:none;
+  }
+  .settings-panel.open{
+    display:block; opacity:1; transform:translateY(0) scale(1); pointer-events:auto;
+    animation:settingsIn .16s cubic-bezier(.2,.8,.3,1);
+  }
+  @keyframes settingsIn{ from{ opacity:0; transform:translateY(-6px) scale(.98); } to{ opacity:1; transform:translateY(0) scale(1); } }
+
+  .settings-title{
+    font-family:var(--font-serif); font-size:15.5px; margin:0 0 12px; display:flex; align-items:center; gap:8px;
+    color:var(--ink);
+  }
+  .settings-title .icon{ color:var(--accent); width:15px; height:15px; }
+
+  .settings-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 12px;
+    border-radius:var(--radius-sm); background:var(--surface-2); border:1px solid var(--border);
+  }
+  .settings-row + .settings-row{ margin-top:8px; }
+  .settings-row-stack{ flex-direction:column; align-items:stretch; }
+  .settings-input-row{ display:flex; gap:8px; }
+  .settings-input-row .field{ flex:1; min-width:0; }
+  .settings-save{ flex-shrink:0; padding:9px 12px; }
+  .settings-label{ display:flex; align-items:center; gap:9px; font-size:13px; color:var(--ink); font-weight:500; }
+  .settings-label .icon{ color:var(--ink-faint); width:15px; height:15px; }
+
+  .theme-toggle{
+    display:inline-flex; align-items:center; gap:7px; border:1px solid var(--border); background:var(--surface-3);
+    color:var(--ink-soft); border-radius:999px; padding:7px 12px 7px 8px; font-size:12px; font-weight:600; cursor:pointer;
+    transition:background-color .12s, color .12s, border-color .12s;
+  }
+  .theme-toggle:hover{ color:var(--accent-hover); background:var(--accent-soft); border-color:var(--accent-soft-strong); }
+  .theme-toggle .icon{ width:14px; height:14px; }
+
+  @media (max-width:880px){
+    .settings-panel{ --settings-top:58px; --settings-right:16px; }
+  }
+
+  .topbar{ display:none; position:sticky; top:0; z-index:20; background:var(--topbar-bg); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  .topbar-inner{ display:flex; align-items:center; gap:12px; padding:14px 16px; }
+  .topbar-tabs{ display:flex; gap:4px; overflow-x:auto; padding:12px 16px 14px; }
+  .topbar-tabs::-webkit-scrollbar{ display:none; }
+  .tab-pill{
+    flex-shrink:0; display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px;
+    border:1px solid var(--border); background:var(--surface); color:var(--ink-soft); font-size:13px;
+    cursor:pointer; white-space:nowrap;
+  }
+  .tab-pill.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
+
+  main{ flex:1; min-width:0; padding:34px 42px 90px; max-width:1120px; }
+
+  @media (max-width:880px){
+    .sidebar{ display:none; }
+    .topbar{ display:block; }
+    main{ padding:8px 16px 60px; max-width:100%; }
+  }
+
+  /* ---------- primitives ---------- */
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+    padding:24px; box-shadow:var(--shadow);
+  }
+  .section-title{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:19px; margin-bottom:18px; }
+  .section-title .icon-lg{ color:var(--accent); }
+  .eyebrow{ font-size:12px; font-weight:600; color:var(--ink-faint); margin:0 0 14px; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; border:none; cursor:pointer;
+    border-radius:var(--radius-sm); padding:10px 18px; font-size:13.5px; font-weight:600; transition:background-color .12s, opacity .12s;
+  }
+  .btn-primary{ background:var(--accent); color:#fff; } .btn-primary:hover{ background:var(--accent-hover); }
+  .btn-quiet{ background:var(--surface-3); color:var(--ink); } .btn-quiet:hover{ background:var(--border); }
+  .btn-danger{ background:var(--rust); color:#fff; } .btn-danger:hover{ opacity:.88; }
+  .btn-sage{ background:var(--sage); color:#fff; } .btn-sage:hover{ opacity:.88; }
+  .btn-full{ width:100%; }
+  .btn-icon{ padding:9px; border-radius:var(--radius-sm); background:var(--surface-3); color:var(--ink-soft); border:none; cursor:pointer; }
+  .btn-icon:hover{ color:var(--ink); background:var(--border); }
+
+  .field{
+    width:100%; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface-2);
+    color:var(--ink); padding:9px 12px; font-size:13.5px;
+  }
+  .field:focus{ outline:none; border-color:var(--accent); background:var(--surface); box-shadow:0 0 0 3px var(--accent-soft); }
+  .field::placeholder{ color:var(--ink-faint); }
+  select.field{
+    appearance:none; -webkit-appearance:none; -moz-appearance:none; cursor:pointer;
+    padding-right:34px; background-repeat:no-repeat; background-position:right 10px center; background-size:15px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23A39C89' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+  select.field:disabled{ cursor:not-allowed; opacity:.6; }
+  select.field option{ background:var(--surface); color:var(--ink); }
+  :root[data-theme="dark"] select.field{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23867F70' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+  :root[data-theme="amoled"] select.field{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23696969' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .row > *{ flex:1; min-width:120px; }
+  .stack{ display:flex; flex-direction:column; gap:10px; }
+
+  .panel{ border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface-2); padding:16px; }
+
+  .chip{ display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:3px 10px; font-size:11.5px; font-weight:600; }
+  .chip-accent{ background:var(--accent-soft); color:var(--accent-hover); }
+  .chip-sage{ background:var(--sage-soft); color:var(--sage); }
+  .chip-ochre{ background:var(--ochre-soft); color:var(--ochre); }
+  .chip-rust{ background:var(--rust-soft); color:var(--rust); }
+  .chip-neutral{ background:var(--surface-3); color:var(--ink-soft); }
+
+  .subject-chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .subject-chip{
+    display:inline-flex; align-items:center; gap:8px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:999px; padding:6px 6px 6px 14px; font-size:13px; font-weight:600; color:var(--ink);
+  }
+  .subject-chip-count{
+    display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 5px;
+    border-radius:999px; background:var(--surface-3); color:var(--ink-faint); font-size:11px; font-weight:700;
+  }
+  .subject-chip-remove{
+    display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:999px;
+    border:none; background:none; color:var(--ink-faint); cursor:pointer; padding:0; flex-shrink:0;
+    transition:background-color .12s, color .12s;
+  }
+  .subject-chip-remove .icon{ width:12px; height:12px; }
+  .subject-chip-remove:hover{ background:var(--rust-soft); color:var(--rust); }
+
+  .test-subject-rows{ display:flex; flex-direction:column; gap:8px; }
+  .test-subject-row{ display:flex; align-items:center; gap:10px; }
+  .test-subject-row .chip{ flex-shrink:0; min-width:110px; justify-content:center; }
+  .test-subject-slash{ color:var(--ink-faint); font-weight:600; flex-shrink:0; }
+  .test-subject-add{ display:flex; gap:8px; margin-top:10px; }
+  .test-subject-hint{ font-size:11.5px; color:var(--ink-faint); margin:8px 0 0; }
+
+  .empty{ text-align:center; font-size:13.5px; color:var(--ink-faint); padding:28px 12px; }
+  .empty-dashed{ border:1.5px dashed var(--border); border-radius:var(--radius-lg); background:var(--surface-2); }
+
+  .list{ display:flex; flex-direction:column; gap:8px; }
+  .grid-2{ display:grid; grid-template-columns:1fr; gap:20px; }
+  .grid-4{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  @media (min-width:640px){ .grid-4{ grid-template-columns:repeat(4,1fr); } }
+  @media (min-width:900px){ .grid-2{ grid-template-columns:1fr 1fr; } }
+  .space-y{ display:flex; flex-direction:column; gap:22px; }
+
+  /* ---------- dashboard ---------- */
+  .streak-card{ background:linear-gradient(160deg, var(--surface) 60%, var(--surface-2) 100%); }
+  .streak-top{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px; }
+  .streak-left{ display:flex; align-items:center; gap:16px; }
+  .streak-flame{
+    width:60px; height:60px; border-radius:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    background:var(--surface-3); color:var(--ink-faint);
+  }
+  .streak-flame.on{ background:var(--accent-soft); color:var(--accent); }
+  .streak-num{ font-family:var(--font-serif); font-size:34px; color:var(--ink); }
+  .streak-num span{ font-family:var(--font-sans); font-size:15px; color:var(--ink-faint); font-weight:500; margin-left:4px; }
+  .streak-sub{ margin:2px 0 0; font-size:12px; color:var(--ink-faint); }
+  .goal-label{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-faint); justify-content:flex-end; }
+  .goal-value{ display:flex; align-items:center; gap:6px; font-family:var(--font-serif); font-size:22px; color:var(--ink); background:none; border:none; cursor:pointer; margin-top:2px; }
+  .goal-value:hover .icon{ color:var(--ink-soft); }
+  .goal-value .icon{ color:var(--ink-faint); }
+  .goal-edit{ display:flex; gap:8px; margin-top:4px; }
+  .goal-edit .field{ width:88px; font-size:16px; text-align:center; }
+  .progress-track{ height:9px; width:100%; border-radius:999px; background:var(--surface-3); overflow:hidden; margin-top:8px; }
+  .progress-fill{ height:100%; border-radius:999px; background:var(--ochre); transition:width .3s; }
+  .progress-fill.met{ background:var(--sage); }
+  .progress-row{ display:flex; justify-content:space-between; font-size:11.5px; color:var(--ink-faint); margin-top:16px; margin-bottom:2px; }
+
+  .stat-card{ display:flex; flex-direction:column; gap:10px; }
+  .stat-top{ display:flex; align-items:center; justify-content:space-between; }
+  .stat-label{ font-size:12px; color:var(--ink-faint); }
+  .stat-value{ font-family:var(--font-serif); font-size:28px; }
+
+  .chart-wrap{ width:100%; min-width:0; }
+  .chart-svg{ width:100%; height:auto; display:block; }
+  .test-chart-wrap{ width:100%; min-width:0; overflow:hidden; }
+  .test-chart-svg{ width:100%; height:auto; display:block; aspect-ratio:16/7; min-height:210px; }
+  .legend{ display:flex; gap:14px 18px; flex-wrap:wrap; justify-content:center; margin-top:10px; font-size:11.5px; color:var(--ink-soft); }
+  .legend.legend-stacked{ flex-direction:column; align-items:stretch; gap:2px; max-width:420px; margin-left:auto; margin-right:auto; }
+  .legend-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; vertical-align:middle; border:1.5px solid transparent; box-sizing:border-box; flex:0 0 auto; }
+  .legend-item{
+    display:inline-flex; align-items:center; border:none; background:none; cursor:pointer; padding:3px 6px;
+    border-radius:999px; font-size:inherit; font-family:inherit; color:inherit; transition:background-color .12s, color .12s, opacity .12s;
+  }
+  .legend-stacked .legend-item{
+    display:flex; border-radius:6px; text-align:left; padding:4px 8px; white-space:nowrap; overflow:hidden;
+  }
+  .legend-stacked .legend-item span:last-child{ overflow:hidden; text-overflow:ellipsis; }
+  .legend-item:hover{ background:var(--surface-3); }
+  .legend-item-off{ opacity:.5; text-decoration:line-through; }
+  @media (max-width:600px){
+    .test-chart-svg{ aspect-ratio:4/3; min-height:240px; }
+    .legend{ gap:4px 8px; font-size:11px; }
+    .legend.legend-stacked{ max-width:100%; }
+    .test-row{ align-items:flex-start; flex-direction:column; }
+    .test-row > div:last-child{ width:100%; justify-content:space-between; }
+    .timer-card{ align-items:flex-start; }
+    .timer-card .btn{ flex-shrink:0; }
+    .chapter-head{ padding:14px 15px; }
+    .chapter-body{ padding:15px; }
+    .card{ padding:18px; }
+  }
+
+  .todo-mini{ display:flex; align-items:center; gap:9px; font-size:13.5px; color:var(--ink); padding:3px 0; }
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+
+  /* ---------- planner ---------- */
+  .timer-card{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .timer-label{ font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); margin:0 0 3px; }
+  .timer-value{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:27px; font-weight:600; color:var(--ink); margin:0; font-variant-numeric:tabular-nums; }
+  .timer-note{ font-size:11px; color:var(--ink-faint); margin-top:10px; }
+
+  .log-row, .todo-row{ border:1px solid var(--border); background:var(--surface-2); border-radius:var(--radius-md); padding:12px; }
+  .log-top{ display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:500; }
+  .log-notes{ font-size:12px; color:var(--ink-faint); margin:5px 0 0; }
+  .todo-row{ display:flex; align-items:flex-start; gap:11px; }
+  .todo-row input[type=checkbox]{ margin-top:2px; }
+  .todo-text{ font-size:13.5px; margin:0; word-break:break-word; }
+  .todo-text.done{ color:var(--ink-faint); text-decoration:line-through; }
+  .todo-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  input[type=checkbox]{ width:16px; height:16px; accent-color:var(--accent); flex-shrink:0; }
+
+  .scroll-list{ max-height:380px; overflow-y:auto; padding-right:4px; }
+
+  /* ---------- syllabus ---------- */
+  .filter-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .filter-pill{
+    border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--ink-soft);
+    padding:7px 14px; font-size:12.5px; font-weight:500; cursor:pointer;
+  }
+  .filter-pill.active{ border-color:var(--accent); background:var(--accent); color:#fff; }
+
+  .chapter{ border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); overflow:hidden; margin-bottom:14px; }
+  .chapter-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; cursor:pointer; }
+  .chapter-title{ font-family:var(--font-serif); font-size:17px; }
+  .chapter-sub{ font-size:12.5px; color:var(--ink-faint); margin-top:2px; }
+  .chapter-actions{ display:flex; align-items:center; gap:14px; }
+  .chevron{ color:var(--ink-faint); transition:transform .2s; }
+  .chevron.open{ transform:rotate(180deg); }
+  .chapter-body{ border-top:1px solid var(--border); padding:18px 20px; }
+  .field-label{ font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); display:block; margin-bottom:8px; }
+  textarea.field{ resize:vertical; min-height:76px; }
+
+  .lecture{ position:relative; margin-left:6px; padding:16px 0 16px 22px; border-left:2px solid var(--border); }
+  .lecture::before{ content:''; position:absolute; left:-6px; top:22px; width:10px; height:10px; border-radius:50%; background:var(--ink-faint); }
+  .lecture-top{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .lecture-title{ font-size:14.5px; font-weight:600; }
+  .lecture-date{ font-size:12px; color:var(--ink-faint); margin-top:2px; }
+  select.comfort-select{
+    appearance:none; -webkit-appearance:none; -moz-appearance:none; border-radius:8px; border:1px solid transparent; padding:6px 26px 6px 10px; font-size:12px; font-weight:600; cursor:pointer;
+    background-repeat:no-repeat; background-position:right 8px center; background-size:13px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+  .comfort-A{ background-color:var(--sage-soft); color:var(--sage); }
+  .comfort-B{ background-color:var(--ochre-soft); color:var(--ochre); }
+  .comfort-C{ background-color:var(--rust-soft); color:var(--rust); }
+  .comfort-empty{ background-color:var(--surface-3); color:var(--ink-soft); }
+  .hw-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .hw-item{ display:flex; align-items:center; gap:10px; }
+  .hw-item span{ flex:1; font-size:13px; }
+  .hw-item span.done{ color:var(--ink-faint); text-decoration:line-through; }
+
+
+  .timer-config{ background:var(--surface-2); }
+  .timer-tag-note{ margin:8px 0 0; font-size:11.5px; color:var(--ink-faint); }
+  .chapter-study-strip{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:12px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--surface-2); }
+  .chapter-study-strip > div, .chapter-study-strip > label{ display:flex; flex-direction:column; gap:3px; }
+  .chapter-study-strip span{ font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
+  .chapter-study-strip strong{ font-family:var(--font-serif); font-size:18px; }
+  .chapter-target-input{ padding:6px 8px; max-width:110px; }
+  .revision-summary{ display:flex; gap:8px; flex-wrap:wrap; }
+  .revision-summary > div{ min-width:82px; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); }
+  .revision-summary span{ display:block; font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
+  .revision-summary strong{ display:block; margin-top:2px; font-family:var(--font-serif); font-size:20px; }
+  .revision-subject-card{ padding:20px; }
+  .revision-subject-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .revision-subject-title{ margin:0; font-family:var(--font-serif); font-size:18px; }
+  .revision-subject-sub{ margin:4px 0 0; color:var(--ink-faint); font-size:12px; }
+  .revision-table{ margin-top:14px; border-top:1px solid var(--border); }
+  .revision-row{ display:flex; align-items:center; gap:14px; padding:13px 0; border-bottom:1px solid var(--border); }
+  .revision-row:last-child{ border-bottom:none; padding-bottom:0; }
+  .revision-row-title{ font-size:13.5px; font-weight:600; }
+  .revision-meta{ margin-top:3px; font-size:11.5px; color:var(--ink-faint); }
+  .revision-count{ min-width:45px; text-align:right; font-family:var(--font-serif); font-size:17px; }
+  @media (max-width:640px){ .chapter-study-strip{ grid-template-columns:1fr 1fr; } .chapter-study-strip label{ grid-column:1/-1; } }
+
+  /* ---------- tests ---------- */
+  .test-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid var(--border); background:var(--surface); border-radius:var(--radius-md); padding:14px 16px; }
+  .test-name{ font-weight:600; font-size:14px; }
+  .test-date{ font-size:11.5px; color:var(--ink-faint); margin-top:1px; }
+  .test-tags{ display:flex; gap:6px; margin-top:7px; flex-wrap:wrap; }
+  .test-score{ font-family:var(--font-serif); font-size:19px; color:var(--accent-hover); text-align:right; }
+  .test-score span{ font-family:var(--font-sans); font-size:12px; color:var(--ink-faint); }
+  .test-pct{ font-size:11px; color:var(--ink-faint); text-align:right; }
+
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--border); border-radius:8px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-text">
+        <h1 id="sidebarAppName">JEE Command Center</h1>
+        <p>Lectures, homework, hours &amp; tests</p>
+      </div>
+      <button class="btn-icon settings-trigger" id="sidebarSettingsToggle" data-action="toggle-settings" aria-label="Open settings" aria-expanded="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 00-.1-1.2l1.7-1.3-1.8-3.1-2 .8a7 7 0 00-2.1-1.2L14.4 4h-3.6l-.3 2a7 7 0 00-2.1 1.2l-2-.8-1.8 3.1 1.7 1.3A7 7 0 006.2 12c0 .4 0 .8.1 1.2l-1.7 1.3 1.8 3.1 2-.8a7 7 0 002.1 1.2l.3 2h3.6l.3-2a7 7 0 002.1-1.2l2 .8 1.8-3.1-1.7-1.3c.1-.4.1-.8.1-1.2z"/></svg></button>
+    </div>
+    <nav class="nav" id="sideNav"></nav>
+    <div class="sidebar-foot" id="sidebarFoot"></div>
+  </aside>
+
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div>
+          <h1 id="topbarAppName" style="font-size:14.5px;">JEE Command Center</h1>
+        </div>
+        <button class="btn-icon topbar-settings-btn" id="topbarSettingsToggle" data-action="toggle-settings" aria-label="Open settings" aria-expanded="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 00-.1-1.2l1.7-1.3-1.8-3.1-2 .8a7 7 0 00-2.1-1.2L14.4 4h-3.6l-.3 2a7 7 0 00-2.1 1.2l-2-.8-1.8 3.1 1.7 1.3A7 7 0 006.2 12c0 .4 0 .8.1 1.2l-1.7 1.3 1.8 3.1 2-.8a7 7 0 002.1 1.2l.3 2h3.6l.3-2a7 7 0 002.1-1.2l2 .8 1.8-3.1-1.7-1.3c.1-.4.1-.8.1-1.2z"/></svg></button>
+      </div>
+      <div class="topbar-tabs" id="topNav"></div>
+    </div>
+    <div class="settings-panel" id="settingsPanel" aria-hidden="true"></div>
+    <main id="main"></main>
+  </div>
+</div>
+
+<script>
+/* ============================ constants ============================ */
+const DEFAULT_SUBJECTS = ["Physics","Physical Chemistry","Organic Chemistry","Inorganic Chemistry","Mathematics"];
+const TABS = [
+  { id:"dashboard", label:"Dashboard", icon:"dashboard" },
+  { id:"syllabus", label:"Syllabus", icon:"bookOpen" },
+  { id:"planner", label:"Planner", icon:"checkSquare" },
+  { id:"revision", label:"Revision", icon:"target" },
+  { id:"tests", label:"Tests", icon:"target" },
+  { id:"community", label:"Community", icon:"users" },
+];
+const LIGHT_COLORS = { border:"#E8E1D2", inkFaint:"#A39C89", accent:"#D97757", sage:"#6E8F5C", ochre:"#B8862E", rust:"#B5573B", ink:"#2B2822" };
+const DARK_COLORS = { border:"#454440", inkFaint:"#867F70", accent:"#E0895F", sage:"#8FB37D", ochre:"#D6AC5C", rust:"#DA8567", ink:"#F3F1E9" };
+function getColors(){ return state.theme === "dark" ? DARK_COLORS : LIGHT_COLORS; }
+
+/* ============================ supabase REST client ============================ */
+const SUPABASE_URL = "https://jkwygdbqgeoowgaqkyns.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imprd3lnZGJxZ2Vvb3dnYXFreW5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxMzM1ODYsImV4cCI6MjEwNDcwOTU4Nn0.UWegTg6hFitsVqhZgDjzSm_LCSoTQM7TCGTbRwOdz7g";
+const SUPABASE_SESSION_KEY = "jee-command-center:supabase-session:v1";
+var supabase = null;
+var supabaseInitError = "";
+
+function makeSupabaseError(message, status){
+  const e = new Error(message || "Supabase request failed");
+  if (status) e.status = status;
+  return e;
+}
+
+async function supabaseFetch(path, options = {}){
+  const headers = Object.assign({
+    apikey: SUPABASE_ANON_KEY,
+    "Content-Type": "application/json"
+  }, options.headers || {});
+  if (options.accessToken) headers.Authorization = "Bearer " + options.accessToken;
+  const init = Object.assign({}, options, { headers });
+  delete init.accessToken;
+  let response;
+  try{
+    response = await fetch(SUPABASE_URL + path, init);
+  }catch(err){
+    throw makeSupabaseError("Network error while connecting to Supabase. Check your connection or browser blocking settings.");
+  }
+  const text = await response.text();
+  let body = null;
+  if (text){
+    try{ body = JSON.parse(text); }catch{ body = text; }
+  }
+  if (!response.ok){
+    const msg = body?.msg || body?.message || body?.error_description || body?.error || (typeof body === "string" ? body : "Supabase request failed");
+    throw makeSupabaseError(msg, response.status);
+  }
+  return body;
+}
+
+function readSupabaseSession(){
+  try{
+    const raw = localStorage.getItem(SUPABASE_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch{ return null; }
+}
+function writeSupabaseSession(session){
+  try{
+    if (session) localStorage.setItem(SUPABASE_SESSION_KEY, JSON.stringify(session));
+    else localStorage.removeItem(SUPABASE_SESSION_KEY);
+  }catch(err){ console.warn("Could not persist Supabase session.", err); }
+}
+
+async function refreshSupabaseSession(session){
+  if (!session?.refresh_token) return null;
+  try{
+    const body = await supabaseFetch("/auth/v1/token?grant_type=refresh_token", {
+      method: "POST",
+      body: JSON.stringify({ refresh_token: session.refresh_token })
+    });
+    const next = body?.session || body;
+    if (next?.access_token) writeSupabaseSession(next);
+    return next?.access_token ? next : null;
+  }catch(err){
+    console.warn("Supabase session refresh failed:", err);
+    writeSupabaseSession(null);
+    return null;
+  }
+}
+
+function getSessionUser(session){
+  return session?.user || null;
+}
+
+async function getValidSupabaseSession(){
+  let session = readSupabaseSession();
+  if (!session?.access_token) return null;
+  const expiresAt = Number(session.expires_at || 0);
+  const needsRefresh = expiresAt > 0 && expiresAt * 1000 < Date.now() + 60_000;
+  if (needsRefresh){
+    session = await refreshSupabaseSession(session);
+  }
+  return session?.access_token ? session : null;
+}
+
+function queryBuilder(table){
+  let action = "select";
+  let selectColumns = "*";
+  const filters = [];
+  let orderClause = "";
+
+  async function execute(){
+    const qs = new URLSearchParams();
+    if (action === "select"){
+      qs.set("select", selectColumns);
+      for (const [col,val] of filters) qs.append(col, "eq." + String(val));
+      if (orderClause) qs.set("order", orderClause);
+      const body = await supabaseFetch("/rest/v1/" + encodeURIComponent(table) + "?" + qs.toString(), {
+        method: "GET",
+        accessToken: readSupabaseSession()?.access_token
+      });
+      return { data: Array.isArray(body) ? body : [], error: null };
+    }
+    if (action === "delete"){
+      for (const [col,val] of filters) qs.append(col, "eq." + String(val));
+      await supabaseFetch("/rest/v1/" + encodeURIComponent(table) + (qs.toString() ? "?" + qs.toString() : ""), {
+        method: "DELETE",
+        headers: { Prefer: "return=minimal" },
+        accessToken: readSupabaseSession()?.access_token
+      });
+      return { data: null, error: null };
+    }
+    throw makeSupabaseError("Unsupported Supabase query action");
+  }
+
+  const builder = {
+    select(columns = "*"){ action = "select"; selectColumns = columns; return builder; },
+    eq(column, value){ filters.push([column, value]); return builder; },
+    order(column, options = {}){
+      orderClause = column + (options.ascending === false ? ".desc" : ".asc");
+      return builder;
+    },
+    delete(){ action = "delete"; return builder; },
+    then(resolve, reject){ return execute().then(resolve, reject); },
+    catch(reject){ return execute().catch(reject); }
+  };
+  return builder;
+}
+
+function createSupabaseRestClient(){
+  return {
+    auth: {
+      async getSession(){
+        return { data: { session: await getValidSupabaseSession() }, error: null };
+      },
+      async signInAnonymously(){
+        try{
+          const body = await supabaseFetch("/auth/v1/signup", {
+            method: "POST",
+            body: JSON.stringify({})
+          });
+          const session = body?.session || body;
+          if (!session?.access_token || !session?.user?.id){
+            throw makeSupabaseError("Anonymous sign-in returned no session. Enable Anonymous Sign-Ins in Supabase Authentication.");
+          }
+          writeSupabaseSession(session);
+          return { data: { session, user: session.user }, error: null };
+        }catch(err){
+          return { data: { session: null }, error: err };
+        }
+      },
+      async getUser(){
+        const session = await getValidSupabaseSession();
+        return { data: { user: getSessionUser(session) }, error: null };
+      },
+      async signOut(){
+        writeSupabaseSession(null);
+        return { error: null };
+      }
+    },
+    from(table){
+      const base = queryBuilder(table);
+      base.upsert = async (rows, options = {}) => {
+        try{
+          const qs = new URLSearchParams();
+          if (options.onConflict) qs.set("on_conflict", options.onConflict);
+          await supabaseFetch("/rest/v1/" + encodeURIComponent(table) + (qs.toString() ? "?" + qs.toString() : ""), {
+            method: "POST",
+            headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+            body: JSON.stringify(rows),
+            accessToken: readSupabaseSession()?.access_token
+          });
+          return { data: null, error: null };
+        }catch(err){
+          return { data: null, error: err };
+        }
+      };
+      return base;
+    }
+  };
+}
+
+function initSupabase(){
+  if (supabase) return true;
+  try{
+    if (!SUPABASE_URL || SUPABASE_URL.includes("YOUR_PROJECT")){
+      supabaseInitError = "Supabase project URL is missing.";
+      return false;
+    }
+    if (!SUPABASE_ANON_KEY){
+      supabaseInitError = "Supabase anon key is missing.";
+      return false;
+    }
+    supabase = createSupabaseRestClient();
+    supabaseInitError = "";
+    return true;
+  }catch(err){
+    supabaseInitError = err?.message || String(err);
+    console.warn("Supabase init error:", err);
+    return false;
+  }
+}
+
+let supabaseAuthReady = false;
+let supabaseAuthError = "";
+async function ensureSupabaseAuth(){
+  if (!supabase) initSupabase();
+  if (!supabase) return false;
+  if (supabaseAuthReady) return true;
+  try{
+    const { data: sessionData } = await supabase.auth.getSession();
+    let session = sessionData?.session || null;
+    if (!session){
+      const { data, error } = await supabase.auth.signInAnonymously();
+      if (error) throw error;
+      session = data?.session || null;
+    }
+    if (!session?.user?.id) throw new Error("Could not establish a Supabase user session.");
+    state.community.memberId = session.user.id;
+    supabaseAuthReady = true;
+    persistState();
+    return true;
+  }catch(err){
+    supabaseAuthError = err?.message || String(err);
+    console.warn("Supabase auth error:", err);
+    return false;
+  }
+}
+
+const ICONS = {
+  flame:'<path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.2 1.8"/>',
+  checkSquare:'<path d="M8.5 12.5l2.2 2.2L16 9"/><rect x="3.5" y="3.5" width="17" height="17" rx="4"/>',
+  bookOpen:'<path d="M3 5.5c2-1.1 5-1.1 7 .2v13.1c-2-1.3-5-1.3-7-.2zM21 5.5c-2-1.1-5-1.1-7 .2v13.1c2-1.3 5-1.3 7-.2z"/>',
+  chevronDown:'<path d="M6 9l6 6 6-6"/>',
+  trash:'<path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m3 0v13a2 2 0 01-2 2H8a2 2 0 01-2-2V7h12z"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  pencil:'<path d="M15.2 3.8l5 5L8.5 20.5H3.5v-5z"/>',
+  check:'<path d="M4 12l5 5L20 6"/>',
+  play:'<path d="M6 4l14 8-14 8z"/>',
+  stop:'<rect x="5" y="5" width="14" height="14" rx="2"/>',
+  dashboard:'<rect x="3" y="3" width="7" height="9" rx="1.6"/><rect x="14" y="3" width="7" height="5" rx="1.6"/><rect x="14" y="12" width="7" height="9" rx="1.6"/><rect x="3" y="16" width="7" height="5" rx="1.6"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+  moon:'<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>',
+  users:'<circle cx="9" cy="8" r="3.2"/><path d="M2.7 19.3c0-3.4 2.8-5.4 6.3-5.4s6.3 2 6.3 5.4"/><circle cx="17.2" cy="9.2" r="2.5"/><path d="M15.6 14c2.5.4 4.2 1.9 4.7 3.9"/>',
+  settings:'<circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 00-.1-1.2l1.7-1.3-1.8-3.1-2 .8a7 7 0 00-2.1-1.2L14.4 4h-3.6l-.3 2a7 7 0 00-2.1 1.2l-2-.8-1.8 3.1 1.7 1.3A7 7 0 006.2 12c0 .4 0 .8.1 1.2l-1.7 1.3 1.8 3.1 2-.8a7 7 0 002.1 1.2l.3 2h3.6l.3-2a7 7 0 002.1-1.2l2 .8 1.8-3.1-1.7-1.3c.1-.4.1-.8.1-1.2z"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+};
+function icon(name, cls){ return `<svg class="icon ${cls||''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`; }
+
+/* ============================ helpers ============================ */
+const uid = () => Math.random().toString(36).slice(2, 11);
+const fmtLocal = (d) => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+const todayStr = () => fmtLocal(new Date());
+const dayBefore = (dateStr) => { const d = new Date(dateStr+"T00:00:00"); d.setDate(d.getDate()-1); return fmtLocal(d); };
+const esc = (s) => String(s==null?"":s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function computeStreak(logs, goal, todayStrVal){
+  if (!goal || goal <= 0) return 0;
+  const hoursByDate = new Map();
+  for (const log of logs) hoursByDate.set(log.date, (hoursByDate.get(log.date) || 0) + Number(log.hours || 0));
+  const meets = (d) => (hoursByDate.get(d) || 0) >= goal;
+  let cursor = meets(todayStrVal) ? todayStrVal : dayBefore(todayStrVal);
+  if (!meets(cursor)) return 0;
+  let streak = 0;
+  while (meets(cursor)) { streak++; cursor = dayBefore(cursor); }
+  return streak;
+}
+
+/* ============================ state ============================ */
+const state = {
+  tab: "dashboard",
+  theme: (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light",
+  appName: "JEE Command Center",
+  settingsOpen: false,
+  syllabusFilter: "All",
+  editingGoal: false,
+  openChapters: new Set(),
+  subjects: DEFAULT_SUBJECTS.slice(),
+  newSubjectInput: "",
+  testDraftSubjects: null,
+  chartHiddenSeries: new Set(),
+  chartHiddenPercentileSeries: new Set(),
+
+  chapters: [
+      { id:"c1", subject:"Physics", title:"Kinematics", notes:"Need to review relative motion in 2D.", revisionTarget:1 },
+    { id:"c2", subject:"Physical Chemistry", title:"Atomic Structure", notes:"Memorize the formulas for Bohr model energy levels.", revisionTarget:1 },
+    { id:"c3", subject:"Mathematics", title:"Functions", notes:"", revisionTarget:1 },
+  ],
+  lectures: [
+    { id:"l1", chapterId:"c1", title:"1D Motion Equations", date:"2024-10-01", comfort:"A", completed:true },
+    { id:"l2", chapterId:"c1", title:"Projectile Motion", date:"2024-10-03", comfort:"B", completed:false },
+  ],
+  homeworks: [
+    { id:"h1", lectureId:"l1", title:"HCV Ex 1: 1-10", completed:true },
+    { id:"h2", lectureId:"l2", title:"Module Ex 2", completed:false },
+  ],
+  todos: [
+    { id:"t1", text:"Revise Integration formulas", subject:"Mathematics", date:todayStr(), completed:false },
+    { id:"t2", text:"Solve 10 PYQs of Atomic Structure", subject:"Physical Chemistry", date:todayStr(), completed:true },
+  ],
+  studyLogs: [
+    { id:"s1", date:"2024-10-01", hours:6, notes:"Physics + Maths problem solving" },
+    { id:"s2", date:"2024-10-02", hours:4.5, notes:"Organic Chemistry theory" },
+    { id:"s3", date:"2024-10-03", hours:7, notes:"Full mock analysis" },
+  ],
+  tests: [
+    { id:"te1", name:"Weekly Test 1", date:"2024-09-28", percentile:82.5, scores:{ "Physics":{score:72,max:100}, "Physical Chemistry":{score:33,max:50}, "Organic Chemistry":{score:32,max:50}, "Mathematics":{score:80,max:100} } },
+    { id:"te2", name:"Weekly Test 2", date:"2024-10-05", percentile:86.2, scores:{ "Physics":{score:68,max:100}, "Physical Chemistry":{score:37,max:50}, "Organic Chemistry":{score:37,max:50}, "Mathematics":{score:88,max:100} } },
+  ],
+  dailyGoal: 4,
+  timerRunning: false,
+  timerStartedAt: null,
+  timerType: "Study",
+  timerSubject: "",
+  timerChapterId: "",
+
+  community: {
+    memberId: null,
+    groups: [] // [{ groupCode, displayName, members: [], loading:false, error:"" }]
+  },
+  activeGroupCode: "",
+};
+
+if (state.chapters.length > 0) {
+  state.timerSubject = state.chapters[0].subject;
+  state.timerChapterId = state.chapters[0].id;
+}
+
+
+/* ============================ persistence ============================ */
+const STORAGE_KEY = "jee-command-center:v2";
+
+function serializeState(){
+  return {
+    version: 2,
+    tab: state.tab,
+    theme: state.theme,
+    appName: state.appName,
+    syllabusFilter: state.syllabusFilter,
+    openChapters: Array.from(state.openChapters),
+    chartHiddenSeries: Array.from(state.chartHiddenSeries),
+    chartHiddenPercentileSeries: Array.from(state.chartHiddenPercentileSeries),
+    subjects: state.subjects,
+    chapters: state.chapters,
+    lectures: state.lectures,
+    homeworks: state.homeworks,
+    todos: state.todos,
+    studyLogs: state.studyLogs,
+    tests: state.tests,
+    dailyGoal: state.dailyGoal,
+    timerRunning: !!state.timerRunning,
+    timerStartedAt: state.timerRunning && state.timerStartedAt ? state.timerStartedAt : null,
+    timerType: state.timerType,
+    timerSubject: state.timerSubject,
+    timerChapterId: state.timerChapterId,
+    community: {
+      memberId: state.community.memberId,
+      groups: state.community.groups.map(g => ({ groupCode: g.groupCode, displayName: g.displayName }))
+    },
+    activeGroupCode: state.activeGroupCode
+  };
+}
+
+function persistState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState()));
+  }catch(err){
+    console.warn("Could not persist app state.", err);
+  }
+}
+
+function sanitizeLoadedState(raw){
+  if (!raw || typeof raw !== "object") return;
+  const arrayKeys = ["chapters","lectures","homeworks","todos","studyLogs","tests"];
+  for (const key of arrayKeys){
+    if (Array.isArray(raw[key])) state[key] = raw[key];
+  }
+  if (Array.isArray(state.tests)) state.tests = state.tests.map(normalizeTest);
+  if (typeof raw.tab === "string" && TABS.some(t => t.id === raw.tab)) state.tab = raw.tab;
+  if (["light", "dark", "amoled"].includes(raw.theme)) state.theme = raw.theme;
+  if (typeof raw.appName === "string" && raw.appName.trim()) state.appName = raw.appName.trim().slice(0, 60);
+  if (Array.isArray(raw.subjects)){
+    const cleaned = raw.subjects.map(s => String(s || "").trim()).filter(Boolean);
+    const deduped = Array.from(new Set(cleaned));
+    if (deduped.length > 0) state.subjects = deduped;
+  }
+  if (["All", ...state.subjects].includes(raw.syllabusFilter)) state.syllabusFilter = raw.syllabusFilter;
+  if (Array.isArray(raw.openChapters)) state.openChapters = new Set(raw.openChapters);
+  if (Array.isArray(raw.chartHiddenSeries)) state.chartHiddenSeries = new Set(raw.chartHiddenSeries);
+  if (Array.isArray(raw.chartHiddenPercentileSeries)) state.chartHiddenPercentileSeries = new Set(raw.chartHiddenPercentileSeries);
+  if (Number.isFinite(Number(raw.dailyGoal)) && Number(raw.dailyGoal) > 0) state.dailyGoal = Number(raw.dailyGoal);
+  if (raw.timerType === "Study" || raw.timerType === "Revision") state.timerType = raw.timerType;
+  if (typeof raw.timerSubject === "string") state.timerSubject = raw.timerSubject;
+  if (typeof raw.timerChapterId === "string") state.timerChapterId = raw.timerChapterId;
+  state.timerRunning = !!raw.timerRunning && Number.isFinite(Number(raw.timerStartedAt)) && Number(raw.timerStartedAt) > 0;
+  state.timerStartedAt = state.timerRunning ? Number(raw.timerStartedAt) : null;
+  state.editingGoal = false;
+  if (raw.community && typeof raw.community === "object"){
+    if (typeof raw.community.memberId === "string") state.community.memberId = raw.community.memberId;
+    if (Array.isArray(raw.community.groups)){
+      const cleanedGroups = raw.community.groups
+        .filter(g => g && typeof g === "object" && typeof g.groupCode === "string" && g.groupCode)
+        .map(g => ({
+          groupCode: sanitizeGroupCode(g.groupCode),
+          displayName: String(g.displayName || "").trim().slice(0,24),
+          members: [], loading: false, error: ""
+        }))
+        .filter(g => g.groupCode);
+      // de-dupe by groupCode, keeping the first occurrence
+      const seen = new Set();
+      state.community.groups = cleanedGroups.filter(g => {
+        if (seen.has(g.groupCode)) return false;
+        seen.add(g.groupCode);
+        return true;
+      });
+    } else if (typeof raw.community.groupCode === "string" && raw.community.groupCode && raw.community.joined){
+      // migrate from the old single-group shape
+      state.community.groups = [{
+        groupCode: sanitizeGroupCode(raw.community.groupCode),
+        displayName: String(raw.community.displayName || "").trim().slice(0,24),
+        members: [], loading: false, error: ""
+      }];
+    }
+  }
+  if (typeof raw.activeGroupCode === "string" && state.community.groups.some(g => g.groupCode === raw.activeGroupCode)){
+    state.activeGroupCode = raw.activeGroupCode;
+  } else if (state.community.groups.length > 0){
+    state.activeGroupCode = state.community.groups[0].groupCode;
+  }
+}
+
+function loadState(){
+  try{
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) sanitizeLoadedState(JSON.parse(saved));
+  }catch(err){
+    console.warn("Could not load saved app state.", err);
+  }
+  if (!["light","dark","amoled"].includes(state.theme)) state.theme = "light";
+  document.documentElement.setAttribute("data-theme", state.theme);
+  persistState();
+}
+
+function recordTimerUntilNow(){
+  if (!state.timerRunning || !state.timerStartedAt) return;
+  const nowMs = Date.now();
+  if (nowMs <= state.timerStartedAt) return;
+  let cursorMs = state.timerStartedAt;
+  while (cursorMs < nowMs){
+    const d = new Date(cursorMs);
+    const nextMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1, 0, 0, 0, 0).getTime();
+    const segmentEnd = Math.min(nowMs, nextMidnight);
+    logTimerSeconds(fmtLocal(d), (segmentEnd - cursorMs) / 1000, getTimerMeta());
+    cursorMs = segmentEnd;
+    if (cursorMs === nowMs) break;
+  }
+  state.timerStartedAt = nowMs;
+  persistState();
+  syncCommunityIfJoined();
+}
+
+/* ============================ derived ============================ */
+const getStreak = () => computeStreak(state.studyLogs, state.dailyGoal, todayStr());
+const getTodayHours = () => state.studyLogs.filter(l => l.date === todayStr()).reduce((s,l) => s + l.hours, 0);
+const getTotalHours = () => state.studyLogs.reduce((s,l) => s + l.hours, 0);
+const getChapterStudyHours = (chapterId) => state.studyLogs.filter(l => l.chapterId === chapterId).reduce((s,l) => s + l.hours, 0);
+const getChapterRevisionLogs = (chapterId) => state.studyLogs.filter(l => l.chapterId === chapterId && l.sessionType === "Revision");
+const getChapterRevisionCount = (chapterId) => getChapterRevisionLogs(chapterId).length;
+const getChapterRevisionHours = (chapterId) => getChapterRevisionLogs(chapterId).reduce((s,l) => s + l.hours, 0);
+const getRevisionTarget = (chapter) => Math.max(1, parseInt(chapter.revisionTarget,10) || 1);
+const getSubjectChapters = (subject) => state.chapters.filter(c => c.subject === subject);
+
+/* ============================ CRUD: subjects ============================ */
+function addSubject(name){
+  const trimmed = (name || "").trim();
+  if (!trimmed) return false;
+  if (state.subjects.some(s => s.toLowerCase() === trimmed.toLowerCase())) return false;
+  state.subjects.push(trimmed);
+  return true;
+}
+function removeSubject(name){
+  if (!state.subjects.includes(name)) return;
+  if (state.subjects.length <= 1) return; // always keep at least one subject
+  const removedChapterIds = state.chapters.filter(c => c.subject === name).map(c => c.id);
+  const removedLectureIds = state.lectures.filter(l => removedChapterIds.includes(l.chapterId)).map(l => l.id);
+
+  state.subjects = state.subjects.filter(s => s !== name);
+  state.chapters = state.chapters.filter(c => c.subject !== name);
+  state.lectures = state.lectures.filter(l => !removedChapterIds.includes(l.chapterId));
+  state.homeworks = state.homeworks.filter(h => !removedLectureIds.includes(h.lectureId));
+  removedChapterIds.forEach(id => state.openChapters.delete(id));
+
+  state.todos.forEach(t => { if (t.subject === name) t.subject = ""; });
+
+  if (state.syllabusFilter === name) state.syllabusFilter = "All";
+
+  if (state.timerRunning && removedChapterIds.includes(state.timerChapterId)) stopTimer();
+  if (state.timerSubject === name){
+    state.timerSubject = state.subjects[0] || "";
+    syncTimerChapterForSubject();
+  } else if (removedChapterIds.includes(state.timerChapterId)){
+    syncTimerChapterForSubject();
+  }
+  if (state.testDraftSubjects) state.testDraftSubjects = state.testDraftSubjects.filter(s => s !== name);
+  state.chartHiddenSeries.delete(name);
+}
+
+initSupabase();
+loadState();
+if (state.timerRunning) recordTimerUntilNow();
+
+/* ============================ CRUD: chapters/lectures/hw ============================ */
+function addChapter(subject, title){ if(!title || !title.trim()) return; state.chapters.push({ id:uid(), subject, title:title.trim(), notes:"", revisionTarget:1 }); }
+function updateChapterRevisionTarget(id, value){
+  const c = state.chapters.find(c => c.id === id);
+  const v = parseInt(value, 10);
+  if (c && Number.isFinite(v) && v >= 1) c.revisionTarget = v;
+}
+function syncTimerChapterForSubject(){
+  const chapters = getSubjectChapters(state.timerSubject);
+  if (!chapters.some(c => c.id === state.timerChapterId)) state.timerChapterId = chapters[0]?.id || "";
+}
+function deleteChapter(id){
+  if (state.timerRunning && state.timerChapterId === id) stopTimer();
+  const removedLectures = state.lectures.filter(l => l.chapterId === id).map(l => l.id);
+  state.chapters = state.chapters.filter(c => c.id !== id);
+  state.lectures = state.lectures.filter(l => l.chapterId !== id);
+  state.homeworks = state.homeworks.filter(h => !removedLectures.includes(h.lectureId));
+  state.openChapters.delete(id);
+  syncTimerChapterForSubject();
+}
+function updateChapterNotes(id, notes){ const c = state.chapters.find(c => c.id === id); if (c) c.notes = notes; }
+function addLecture(chapterId, title, date){ if(!title || !title.trim()) return; state.lectures.push({ id:uid(), chapterId, title:title.trim(), date, comfort:null, completed:false }); }
+function toggleLectureStatus(id){ const l = state.lectures.find(l => l.id === id); if (l) l.completed = !l.completed; }
+function updateLectureComfort(id, comfort){ const l = state.lectures.find(l => l.id === id); if (l) l.comfort = comfort || null; }
+function deleteLecture(id){ state.lectures = state.lectures.filter(l => l.id !== id); state.homeworks = state.homeworks.filter(h => h.lectureId !== id); }
+function addHomework(lectureId, title){ if(!title || !title.trim()) return; state.homeworks.push({ id:uid(), lectureId, title:title.trim(), completed:false }); }
+function toggleHomework(id){ const h = state.homeworks.find(h => h.id === id); if (h) h.completed = !h.completed; }
+function deleteHomework(id){ state.homeworks = state.homeworks.filter(h => h.id !== id); }
+
+/* ============================ CRUD: todos ============================ */
+function addTodo(text, subject, date){ if(!text || !text.trim()) return; state.todos.push({ id:uid(), text:text.trim(), subject, date, completed:false }); }
+function toggleTodo(id){ const t = state.todos.find(t => t.id === id); if (t) t.completed = !t.completed; }
+function deleteTodo(id){ state.todos = state.todos.filter(t => t.id !== id); }
+
+/* ============================ CRUD: study logs + timer ============================ */
+function addStudyLog(date, hoursStr, notes){
+  const parsed = parseFloat(hoursStr);
+  if (!date || isNaN(parsed) || parsed <= 0) return;
+  state.studyLogs.push({ id:uid(), date, hours:parsed, notes:(notes||"").trim() });
+  syncCommunityIfJoined();
+}
+function deleteStudyLog(id){ state.studyLogs = state.studyLogs.filter(s => s.id !== id); syncCommunityIfJoined(); }
+
+function logTimerSeconds(dateStr, seconds, meta){
+  if (seconds <= 0) return;
+  const hours = seconds / 3600;
+  state.studyLogs.push({
+    id:uid(),
+    date:dateStr,
+    hours,
+    notes:"Study Timer",
+    source:"timer",
+    sessionType: meta?.sessionType || "Study",
+    subject: meta?.subject || "",
+    chapterId: meta?.chapterId || ""
+  });
+}
+function getTimerMeta(){ return { sessionType:state.timerType, subject:state.timerSubject, chapterId:state.timerChapterId }; }
+function startTimer(){
+  if (state.timerRunning) return false;
+  syncTimerChapterForSubject();
+  if (!state.timerSubject || !state.timerChapterId) return false;
+  state.timerRunning = true;
+  state.timerStartedAt = Date.now();
+  persistState();
+  return true;
+}
+function stopTimer(){
+  if (!state.timerRunning) return false;
+  recordTimerUntilNow();
+  state.timerRunning = false;
+  state.timerStartedAt = null;
+  persistState();
+  return true;
+}
+function formatDuration(totalSeconds){
+  const h = Math.floor(totalSeconds/3600), m = Math.floor((totalSeconds%3600)/60), s = Math.floor(totalSeconds%60);
+  return [h,m,s].map(v => String(v).padStart(2,"0")).join(":");
+}
+
+/* midnight rollover: persist each calendar day separately */
+(function scheduleMidnight(){
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1, 0, 0, 1, 0);
+  setTimeout(() => {
+    if (state.timerRunning) recordTimerUntilNow();
+    renderMain();
+    scheduleMidnight();
+  }, Math.max(1000, next.getTime() - Date.now()));
+})();
+
+/* ============================ CRUD: tests ============================ */
+function addTest(test){ state.tests.push({ id:uid(), ...test }); }
+function deleteTest(id){ state.tests = state.tests.filter(t => t.id !== id); }
+
+/* migrates legacy tests (fixed physics/chemistry/maths fields, or a flat scores{subject:number}
+   shape with one shared maxPerSubject) into the current { subject: {score, max} } shape */
+function normalizeTest(t){
+  const percentile = Number.isFinite(Number(t.percentile)) ? Number(t.percentile) : null;
+  if (t && t.scores && typeof t.scores === "object"){
+    const firstVal = Object.values(t.scores)[0];
+    if (firstVal && typeof firstVal === "object" && "max" in firstVal) return { percentile, ...t }; // already current shape
+    // flat number-per-subject shape, using the old shared maxPerSubject for every subject
+    const sharedMax = Number(t.maxPerSubject) || 0;
+    const scores = {};
+    Object.keys(t.scores).forEach(s => { scores[s] = { score:Number(t.scores[s])||0, max:sharedMax }; });
+    return { id:t.id, name:t.name, date:t.date, percentile, scores };
+  }
+  const legacyMap = { physics:"Physics", chemistry:"Physical Chemistry", maths:"Mathematics" };
+  const sharedMax = Number(t.maxPerSubject) || 0;
+  const scores = {};
+  Object.keys(legacyMap).forEach(k => { if (Number.isFinite(Number(t[k]))) scores[legacyMap[k]] = { score:Number(t[k]), max:sharedMax }; });
+  return { id:t.id, name:t.name, date:t.date, percentile, scores };
+}
+function getTestSubjects(t){ return Object.keys(t.scores || {}); }
+function getTestTotal(t){ return getTestSubjects(t).reduce((sum, s) => sum + (Number(t.scores[s].score) || 0), 0); }
+function getTestMax(t){ return getTestSubjects(t).reduce((sum, s) => sum + (Number(t.scores[s].max) || 0), 0); }
+/* key that identifies a test's exact subject combination, so percentile trends only compare tests covering the same subjects */
+function getSubjectSetKey(t){ return getTestSubjects(t).slice().sort().join("||"); }
+
+/* ============================ community / groups ============================ */
+function isoWeekKey(dateStr){
+  const d = new Date(dateStr+"T00:00:00");
+  const day = (d.getDay()+6)%7; // Monday = 0
+  d.setDate(d.getDate()-day);
+  return fmtLocal(d);
+}
+function getWeekHours(weekKey){
+  return state.studyLogs.filter(l => isoWeekKey(l.date) === weekKey).reduce((s,l) => s + Number(l.hours||0), 0);
+}
+function sanitizeGroupCode(raw){
+  return String(raw||"").toUpperCase().replace(/\s+/g,"").replace(/[^A-Z0-9_-]/g,"").slice(0,24);
+}
+
+function communityMemberKey(groupCode){
+  const c = state.community;
+  return groupCode && c.memberId ? `${groupCode}_${c.memberId}` : "";
+}
+function getGroup(groupCode){
+  return state.community.groups.find(g => g.groupCode === groupCode) || null;
+}
+function syncCommunityIfJoined(){
+  if (state.community.groups.length === 0) return;
+  if (!supabase) initSupabase();
+  if (!supabase) return;
+  ensureSupabaseAuth().then(ready => {
+    if (!ready) return;
+    Promise.all(state.community.groups.map(g => pushCommunityStats(g.groupCode))).then(() => {
+      if (state.tab === "community" && state.activeGroupCode) refreshLeaderboard(state.activeGroupCode);
+    });
+  });
+}
+
+async function pushCommunityStats(groupCode){
+  const c = state.community;
+  const g = getGroup(groupCode);
+  if (!g || !supabase) return;
+  if (!(await ensureSupabaseAuth())) return;
+  c.memberId = (await supabase.auth.getUser()).data?.user?.id || c.memberId;
+  if (!c.memberId) return;
+  const weekKey = isoWeekKey(todayStr());
+  const payload = {
+    id: `${g.groupCode}_${c.memberId}`,
+    group_code: g.groupCode,
+    member_id: c.memberId,
+    display_name: g.displayName,
+    week_key: weekKey,
+    week_hours: getWeekHours(weekKey),
+    total_hours: getTotalHours(),
+    updated_at: Date.now()
+  };
+  try{
+    const { error } = await supabase
+      .from("group_members")
+      .upsert([payload], { onConflict: "id" });
+    if (error) console.warn("Supabase upsert error:", error);
+  }catch(err){
+    console.warn("Could not sync community stats.", err);
+  }
+}
+
+async function refreshLeaderboard(groupCode){
+  const g = getGroup(groupCode);
+  if (!g) return;
+  if (!supabase) initSupabase();
+  if (!supabase) {
+    g.loading = false;
+    g.error = "Supabase could not start: " + (supabaseInitError || "client library unavailable.");
+    renderMain();
+    return;
+  }
+  if (!(await ensureSupabaseAuth())) {
+    g.error = "Supabase anonymous sign-in is not enabled. Enable Anonymous Sign-Ins in Supabase Auth.";
+    g.loading = false;
+    renderMain();
+    return;
+  }
+  g.loading = true;
+  g.error = "";
+  renderMain();
+  try{
+    // Ensure group exists
+    const { error: groupErr } = await supabase
+      .from("groups")
+      .upsert([{ code: g.groupCode }], { onConflict: "code" });
+    if (groupErr) throw groupErr;
+
+    // Fetch leaderboard
+    const { data, error } = await supabase
+      .from("group_members")
+      .select("*")
+      .eq("group_code", g.groupCode)
+      .order("week_hours", { ascending: false });
+    
+    if (error) throw error;
+    
+    const currentWeekKey = isoWeekKey(todayStr());
+    const members = (data || []).map(m => ({
+      ...m,
+      // Supabase returns snake_case column names; normalize the chosen
+      // display name so the leaderboard renders it instead of "Unnamed".
+      displayName: String(m.display_name ?? m.displayName ?? "").trim(),
+      currentWeekHours: m.week_key === currentWeekKey ? Number(m.week_hours || 0) : 0
+    }));
+    g.members = members;
+  }catch(err){
+    g.error = "Could not load leaderboard: " + (err.message || err);
+  }
+  g.loading = false;
+  renderMain();
+}
+
+async function joinCommunityGroup(rawCode, rawName){
+  if (!supabase && !initSupabase()){
+    alert("Supabase could not start. " + (supabaseInitError || "Check the Supabase URL/key and your network connection."));
+    return;
+  }
+  if (!(await ensureSupabaseAuth())){
+    alert("Supabase authentication failed. " + (supabaseAuthError || "Enable Anonymous Sign-Ins in Authentication > Providers."));
+    return;
+  }
+  const code = sanitizeGroupCode(rawCode);
+  const displayName = String(rawName||"").trim().slice(0,24);
+  if (!code || !displayName) return;
+  const c = state.community;
+  c.memberId = (await supabase.auth.getUser()).data?.user?.id || c.memberId;
+  if (!c.memberId) return;
+
+  if (getGroup(code)){
+    alert("You've already joined that group.");
+    return;
+  }
+
+  const newGroup = { groupCode: code, displayName, members: [], loading: false, error: "" };
+  c.groups.push(newGroup);
+  state.activeGroupCode = code;
+
+  try{
+    const { error } = await supabase
+      .from("groups")
+      .upsert([{ code }], { onConflict: "code" });
+    if (error) throw error;
+
+    newGroup.error = "";
+    persistState();
+    await pushCommunityStats(code);
+    await refreshLeaderboard(code);
+  }catch(err){
+    c.groups = c.groups.filter(g => g.groupCode !== code);
+    if (state.activeGroupCode === code) state.activeGroupCode = c.groups[0]?.groupCode || "";
+    alert("Could not join group: " + (err?.message || String(err)));
+    persistState();
+    renderMain();
+  }
+}
+
+async function leaveCommunityGroup(groupCode){
+  const c = state.community;
+  const memberId = c.memberId;
+  c.groups = c.groups.filter(g => g.groupCode !== groupCode);
+  if (state.activeGroupCode === groupCode){
+    state.activeGroupCode = c.groups[0]?.groupCode || "";
+  }
+  persistState();
+  renderMain();
+
+  if (groupCode && memberId && supabase){
+    const { error } = await supabase
+      .from("group_members")
+      .delete()
+      .eq("group_code", groupCode)
+      .eq("member_id", memberId);
+    if (error) console.warn("Could not remove community membership:", error);
+  }
+}
+
+async function updateCommunityDisplayName(groupCode, rawName){
+  const displayName = String(rawName||"").trim().slice(0,24);
+  if (!displayName) return;
+  const g = getGroup(groupCode);
+  if (!g) return;
+  g.displayName = displayName;
+  persistState();
+  await pushCommunityStats(groupCode);
+  await refreshLeaderboard(groupCode);
+}
+
+/* ============================ charts ============================ */
+function areaChartSVG(points){
+  const COLORS = getColors();
+  const w=600, h=230, padL=30, padR=10, padT=14, padB=22;
+  const innerW=w-padL-padR, innerH=h-padT-padB;
+  const maxV = Math.max(1, ...points.map(p=>p.value)) * 1.15;
+  const n = points.length;
+  const xStep = n>1 ? innerW/(n-1) : 0;
+  const coords = points.map((p,i) => [ padL + (n>1? i*xStep : innerW/2), padT + innerH - (p.value/maxV)*innerH ]);
+  const line = coords.map(([x,y],i) => (i===0?"M":"L")+x.toFixed(1)+","+y.toFixed(1)).join(" ");
+  const area = line + ` L${(padL+innerW).toFixed(1)},${(padT+innerH).toFixed(1)} L${padL.toFixed(1)},${(padT+innerH).toFixed(1)} Z`;
+  let grid="";
+  for (let i=0;i<=3;i++){ const gy = padT+innerH-(i/3)*innerH; grid += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${padL+innerW}" y2="${gy.toFixed(1)}" stroke="${COLORS.border}" stroke-width="1"/>`; }
+  const showEvery = n>8 ? Math.ceil(n/8) : 1;
+  let labels="";
+  points.forEach((p,i) => { if (i%showEvery===0 || i===n-1){ const x=coords[i][0]; labels += `<text x="${x.toFixed(1)}" y="${h-6}" font-size="10" fill="${COLORS.inkFaint}" text-anchor="middle">${esc(p.label)}</text>`; } });
+  const dots = coords.map(([x,y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.6" fill="${COLORS.accent}"/>`).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart-svg" preserveAspectRatio="none">
+    <defs><linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${COLORS.accent}" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="${COLORS.accent}" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${grid}<path d="${area}" fill="url(#areaFill)" stroke="none"/><path d="${line}" fill="none" stroke="${COLORS.accent}" stroke-width="2"/>${dots}${labels}
+  </svg>`;
+}
+
+function lineChartSVG(tests){
+  const COLORS = getColors();
+  const w=720, h=320;
+  const padL=58, padR=18, padT=22, padB=58;
+  const innerW=w-padL-padR, innerH=h-padT-padB;
+  const palette = [COLORS.accent, COLORS.sage, COLORS.ochre, COLORS.rust, COLORS.inkFaint];
+  const subjectNames = Array.from(new Set(tests.flatMap(t => getTestSubjects(t))));
+  const series = subjectNames.map((name, i) => ({ key:name, label:name, color:palette[i % palette.length] }));
+  // Plot percentages, not raw marks: full marks can differ per subject and per test, so
+  // raw scores aren't comparable across tests. Percentage of that subject's own full marks
+  // is the value that stays meaningful when weighting changes.
+  const data = tests.map(t => {
+    const row = { name:t.name };
+    subjectNames.forEach(s => {
+      const entry = (t.scores||{})[s];
+      row[s] = (entry && Number(entry.max) > 0) ? (Number(entry.score)/Number(entry.max))*100 : null;
+    });
+    return row;
+  });
+  const n = data.length;
+  const maxV = 100;
+  const xStep = n>1 ? innerW/(n-1) : 0;
+  const xAt = (i) => padL + (n>1 ? i*xStep : innerW/2);
+  const yAt = (v) => padT + innerH - (v/maxV)*innerH;
+
+  let grid="", yLabels="";
+  for (let i=0;i<=4;i++){
+    const value = maxV * (i/4);
+    const gy = padT + innerH - (i/4)*innerH;
+    grid += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${padL+innerW}" y2="${gy.toFixed(1)}" stroke="${COLORS.border}" stroke-width="1"/>`;
+    yLabels += `<text x="${padL-10}" y="${(gy+4).toFixed(1)}" font-size="10.5" fill="${COLORS.inkFaint}" text-anchor="end">${Math.round(value)}%</text>`;
+  }
+
+  let labels="";
+  data.forEach((d,i) => {
+    const label = d.name.length > 13 ? d.name.slice(0,12)+"…" : d.name;
+    labels += `<text x="${xAt(i).toFixed(1)}" y="${h-24}" font-size="10.5" fill="${COLORS.inkFaint}" text-anchor="middle">${esc(label)}</text>`;
+  });
+
+  let lines = "";
+  series.forEach(s => {
+    if (state.chartHiddenSeries.has(s.key)) return;
+    // subjects a given test didn't include come through as null; break the line there
+    // instead of drawing a misleading segment down to zero.
+    let path = "";
+    let started = false;
+    data.forEach((d,i) => {
+      const v = d[s.key];
+      if (v == null){ started = false; return; }
+      path += (started ? "L" : "M") + xAt(i).toFixed(1) + "," + yAt(v).toFixed(1) + " ";
+      started = true;
+    });
+    const dots = data.map((d,i) => d[s.key] == null ? "" : `<circle cx="${xAt(i).toFixed(1)}" cy="${yAt(d[s.key]).toFixed(1)}" r="3.2" fill="${s.color}"/>`).join("");
+    lines += `<path d="${path.trim()}" fill="none" stroke="${s.color}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>${dots}`;
+  });
+
+  const svg = `<svg viewBox="0 0 ${w} ${h}" class="test-chart-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Test score progression as percentage of full marks">${grid}${yLabels}${lines}${labels}</svg>`;
+  const legend = `<div class="legend">${series.map(s => {
+    const hidden = state.chartHiddenSeries.has(s.key);
+    return `<button type="button" class="legend-item ${hidden ? 'legend-item-off' : ''}" data-action="toggle-chart-series" data-id="${esc(s.key)}" aria-pressed="${hidden ? 'false' : 'true'}">
+      <span class="legend-dot" style="background:${hidden ? 'transparent' : s.color}; border-color:${s.color};"></span>${esc(s.label)}
+    </button>`;
+  }).join("")}</div>`;
+  return svg + legend;
+}
+
+/* Percentile trend: percentile is one scalar per test, not per-subject, so it's only an
+   apples-to-apples comparison between tests that cover the exact same set of subjects
+   (a test spanning 5 subjects and one spanning 2 aren't the same yardstick). Tests are
+   grouped by their subject combination and each combination gets its own line. */
+function percentileChartSVG(tests){
+  const COLORS = getColors();
+  const w=720, h=320;
+  const padL=44, padR=18, padT=22, padB=58;
+  const innerW=w-padL-padR, innerH=h-padT-padB;
+  const palette = [COLORS.accent, COLORS.sage, COLORS.ochre, COLORS.rust, COLORS.inkFaint];
+
+  const withPercentile = tests.filter(t => Number.isFinite(t.percentile));
+  const groupKeys = Array.from(new Set(withPercentile.map(t => getSubjectSetKey(t))));
+  const groupLabel = (key) => {
+    const subs = key.split("||");
+    return subs.length <= 2 ? subs.join(" + ") : `${subs.length} subjects: ${subs.join(", ")}`;
+  };
+  const series = groupKeys.map((key,i) => ({ key, label:groupLabel(key), color:palette[i % palette.length] }));
+
+  // x-axis is chronological across ALL logged tests (with a percentile), so each cohort's
+  // line only has points where a test from that specific combination actually occurred.
+  const data = withPercentile.map(t => {
+    const row = { name:t.name };
+    groupKeys.forEach(key => { row[key] = (getSubjectSetKey(t) === key) ? t.percentile : null; });
+    return row;
+  });
+  const n = data.length;
+  const maxV = 100;
+  const xStep = n>1 ? innerW/(n-1) : 0;
+  const xAt = (i) => padL + (n>1 ? i*xStep : innerW/2);
+  const yAt = (v) => padT + innerH - (v/maxV)*innerH;
+
+  let grid="", yLabels="";
+  for (let i=0;i<=4;i++){
+    const value = maxV * (i/4);
+    const gy = padT + innerH - (i/4)*innerH;
+    grid += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${padL+innerW}" y2="${gy.toFixed(1)}" stroke="${COLORS.border}" stroke-width="1"/>`;
+    yLabels += `<text x="${padL-10}" y="${(gy+4).toFixed(1)}" font-size="10.5" fill="${COLORS.inkFaint}" text-anchor="end">${Math.round(value)}</text>`;
+  }
+
+  let labels="";
+  data.forEach((d,i) => {
+    const label = d.name.length > 13 ? d.name.slice(0,12)+"…" : d.name;
+    labels += `<text x="${xAt(i).toFixed(1)}" y="${h-24}" font-size="10.5" fill="${COLORS.inkFaint}" text-anchor="middle">${esc(label)}</text>`;
+  });
+
+  let lines = "";
+  series.forEach(s => {
+    if (state.chartHiddenPercentileSeries.has(s.key)) return;
+    let path = "";
+    let started = false;
+    data.forEach((d,i) => {
+      const v = d[s.key];
+      if (v == null){ started = false; return; }
+      path += (started ? "L" : "M") + xAt(i).toFixed(1) + "," + yAt(v).toFixed(1) + " ";
+      started = true;
+    });
+    const dots = data.map((d,i) => d[s.key] == null ? "" : `<circle cx="${xAt(i).toFixed(1)}" cy="${yAt(d[s.key]).toFixed(1)}" r="3.2" fill="${s.color}"/>`).join("");
+    lines += `<path d="${path.trim()}" fill="none" stroke="${s.color}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>${dots}`;
+  });
+
+  const svg = `<svg viewBox="0 0 ${w} ${h}" class="test-chart-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Test percentile progression, grouped by tests covering the same subjects">${grid}${yLabels}${lines}${labels}</svg>`;
+  const stacked = series.length >= 3;
+  const legend = `<div class="legend ${stacked ? 'legend-stacked' : ''}">${series.map(s => {
+    const hidden = state.chartHiddenPercentileSeries.has(s.key);
+    return `<button type="button" class="legend-item ${hidden ? 'legend-item-off' : ''}" data-action="toggle-percentile-series" data-id="${esc(s.key)}" aria-pressed="${hidden ? 'false' : 'true'}" title="${esc(s.label)}">
+      <span class="legend-dot" style="background:${hidden ? 'transparent' : s.color}; border-color:${s.color};"></span><span>${esc(s.label)}</span>
+    </button>`;
+  }).join("")}</div>`;
+  return svg + legend;
+}
+
+/* ============================ nav render ============================ */
+function updateAppName(name){
+  const cleaned = String(name || "").trim().replace(/\s+/g, " ").slice(0, 60);
+  if (!cleaned) return false;
+  state.appName = cleaned;
+  document.title = cleaned;
+  return true;
+}
+
+function renderNav(){
+  const navHtml = TABS.map(t => `<button class="nav-item ${state.tab===t.id?'active':''}" data-action="set-tab" data-value="${t.id}">${icon(t.icon)}<span>${t.label}</span></button>`).join("");
+  document.getElementById("sideNav").innerHTML = navHtml;
+  document.getElementById("topNav").innerHTML = TABS.map(t => `<button class="tab-pill ${state.tab===t.id?'active':''}" data-action="set-tab" data-value="${t.id}">${icon(t.icon)}${t.label}</button>`).join("");
+  const panel = document.getElementById("settingsPanel");
+  if (panel){
+    const themeLabels = { light: { icon: 'moon', label: 'Dark' }, dark: { icon: 'sun', label: 'AMOLED' }, amoled: { icon: 'sun', label: 'Light' } };
+    const themeIcon = themeLabels[state.theme].icon;
+    const themeLabel = themeLabels[state.theme].label;
+    panel.classList.toggle("open", state.settingsOpen);
+    panel.setAttribute("aria-hidden", state.settingsOpen ? "false" : "true");
+    panel.innerHTML = `<h2 class="settings-title">${icon('settings')}<span>Settings</span></h2>
+      <div class="settings-row settings-row-stack">
+        <div class="settings-label">${icon('pencil')}<span>Header name</span></div>
+        <div class="settings-input-row">
+          <input class="field" id="appNameInput" maxlength="60" value="${esc(state.appName)}" placeholder="Enter a name">
+          <button class="btn btn-primary settings-save" data-action="save-app-name">Save</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">${icon('palette')}<span>Appearance</span></div>
+        <button class="theme-toggle" data-action="toggle-theme" title="Cycle: Light → Dark → AMOLED">${icon(themeIcon)}<span>${themeLabel}</span></button>
+      </div>`;
+    positionSettingsPanel();
+  }
+  const sidebarName = document.getElementById("sidebarAppName");
+  const topbarName = document.getElementById("topbarAppName");
+  if (sidebarName) sidebarName.textContent = state.appName;
+  if (topbarName) topbarName.textContent = state.appName;
+  document.title = state.appName;
+  [document.getElementById("sidebarSettingsToggle"), document.getElementById("topbarSettingsToggle")].forEach(btn => { if (btn) btn.setAttribute("aria-expanded", state.settingsOpen ? "true" : "false"); });
+}
+
+/* anchors the settings panel (and its arrow) under whichever trigger is currently visible */
+function positionSettingsPanel(){
+  const panel = document.getElementById("settingsPanel");
+  if (!panel) return;
+  const sidebarBtn = document.getElementById("sidebarSettingsToggle");
+  const topbarBtn = document.getElementById("topbarSettingsToggle");
+  const trigger = (topbarBtn && topbarBtn.offsetParent !== null) ? topbarBtn
+                : (sidebarBtn && sidebarBtn.offsetParent !== null) ? sidebarBtn
+                : null;
+  if (!trigger){ return; }
+  const r = trigger.getBoundingClientRect();
+  const gap = 10;
+  const panelWidth = Math.min(308, window.innerWidth - 32);
+  let left = r.right - panelWidth;
+  left = Math.max(16, Math.min(left, window.innerWidth - panelWidth - 16));
+  panel.style.setProperty("--settings-top", (r.bottom + gap) + "px");
+  panel.style.setProperty("--settings-left", left + "px");
+  panel.style.setProperty("--settings-right", "auto");
+}
+window.addEventListener("resize", () => { if (state.settingsOpen) positionSettingsPanel(); });
+
+/* ============================ tab templates ============================ */
+function dashboardTemplate(){
+  const streak = getStreak();
+  const todayHours = getTodayHours();
+  const goalMet = state.dailyGoal > 0 && todayHours >= state.dailyGoal;
+  const pct = state.dailyGoal > 0 ? Math.min(100, Math.round((todayHours/state.dailyGoal)*100)) : 0;
+  const totalHours = getTotalHours();
+  const pendingTodos = state.todos.filter(t => !t.completed).length;
+  const totalHw = state.homeworks.length;
+  const doneHw = state.homeworks.filter(h => h.completed).length;
+  const hwPct = totalHw > 0 ? Math.round((doneHw/totalHw)*100) : 0;
+  const hoursByDate = new Map();
+  state.studyLogs.forEach(log => {
+    hoursByDate.set(log.date, (hoursByDate.get(log.date) || 0) + Number(log.hours || 0));
+  });
+  const chartPoints = Array.from(hoursByDate.entries())
+    .sort((a,b) => a[0].localeCompare(b[0]))
+    .map(([date,hours]) => ({ label:date.slice(5), value:hours }));
+  const weakLectures = state.lectures.filter(l => l.comfort === "C");
+  const todaysTasks = state.todos.filter(t => !t.completed).slice(0,5);
+
+  return `
+  <div class="space-y">
+    <div class="card streak-card">
+      <div class="streak-top">
+        <div class="streak-left">
+          <div class="streak-flame ${streak>0?'on':''}">${icon('flame','icon-lg')}</div>
+          <div>
+            <p class="eyebrow" style="margin-bottom:2px;">Current Streak</p>
+            <p class="streak-num">${streak}<span>${streak===1?'day':'days'}</span></p>
+            <p class="streak-sub">${goalMet ? "Goal hit today — streak is safe." : `Log ${Math.max(0, state.dailyGoal-todayHours).toFixed(1)}h more today to keep it alive.`}</p>
+          </div>
+        </div>
+        <div>
+          <div class="goal-label">${icon('target')} Daily Goal</div>
+          ${state.editingGoal ? `
+            <form class="goal-edit" data-form="save-goal">
+              <input class="field" name="goal" type="number" step="0.5" min="0.5" value="${state.dailyGoal}" autofocus />
+              <button type="submit" class="btn-icon" style="background:var(--sage-soft);color:var(--sage);">${icon('check')}</button>
+            </form>
+          ` : `
+            <button class="goal-value" data-action="edit-goal">${state.dailyGoal}h ${icon('pencil')}</button>
+          `}
+        </div>
+      </div>
+      <div class="progress-row"><span>Today: ${todayHours.toFixed(1)}h</span><span style="${goalMet?'color:var(--sage);font-weight:600;':''}">${goalMet ? "Goal reached" : `${pct}% of ${state.dailyGoal}h`}</span></div>
+      <div class="progress-track"><div class="progress-fill ${goalMet?'met':''}" style="width:${pct}%"></div></div>
+    </div>
+
+    <div class="grid-4">
+      <div class="card stat-card"><div class="stat-top"><span class="stat-label">Total Hours</span><span style="color:var(--accent);">${icon('clock','icon-lg')}</span></div><p class="stat-value">${totalHours.toFixed(1)}h</p></div>
+      <div class="card stat-card"><div class="stat-top"><span class="stat-label">Pending Tasks</span><span style="color:var(--ink-soft);">${icon('checkSquare','icon-lg')}</span></div><p class="stat-value">${pendingTodos}</p></div>
+      <div class="card stat-card"><div class="stat-top"><span class="stat-label">Chapters</span><span style="color:var(--sage);">${icon('bookOpen','icon-lg')}</span></div><p class="stat-value">${state.chapters.length}</p></div>
+      <div class="card stat-card"><div class="stat-top"><span class="stat-label">Homework Done</span><span style="color:var(--rust);">${icon('target','icon-lg')}</span></div><p class="stat-value">${hwPct}%</p></div>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow" style="display:flex;align-items:center;gap:6px;">${icon('flame')} STUDY HOURS TREND</p>
+      ${chartPoints.length > 0 ? `<div class="chart-wrap">${areaChartSVG(chartPoints)}</div>` : `<p class="empty">Log some study hours to see your trend.</p>`}
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <p class="eyebrow">WEAK LECTURES (COMFORT C)</p>
+        <div class="stack">
+          ${weakLectures.map(l => `<div class="panel" style="background:var(--rust-soft);border-color:transparent;padding:10px 14px;font-size:13.5px;">${esc(l.title)}</div>`).join("")}
+          ${weakLectures.length===0 ? `<p class="empty" style="padding:8px 0;text-align:left;">No weak lectures flagged. Keep it up!</p>` : ""}
+        </div>
+      </div>
+      <div class="card">
+        <p class="eyebrow">TODAY'S TASKS</p>
+        <div class="stack">
+          ${todaysTasks.map(t => `<div class="todo-mini"><span class="dot"></span>${esc(t.text)}</div>`).join("")}
+          ${pendingTodos===0 ? `<p class="empty" style="padding:8px 0;text-align:left;">All caught up for today.</p>` : ""}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function syllabusTemplate(){
+  const filters = ["All", ...state.subjects];
+  const visible = state.syllabusFilter === "All" ? state.chapters : state.chapters.filter(c => c.subject === state.syllabusFilter);
+  return `
+  <div class="space-y">
+    <div class="card">
+      <h2 class="section-title">${icon('bookOpen','icon-lg')}Add a Chapter</h2>
+      <form data-form="add-chapter" class="row">
+        <select class="field" name="subject" style="flex:0 0 200px;">${state.subjects.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("")}</select>
+        <input class="field" name="title" type="text" placeholder="Chapter title (e.g. Thermodynamics)" required style="flex:2;" />
+        <button type="submit" class="btn btn-primary" style="flex:0 0 auto;">${icon('plus')}Add Chapter</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">${icon('settings','icon-lg')}Manage Subjects</h2>
+      <form data-form="add-subject" class="row" style="margin-bottom:12px;">
+        <input class="field" name="subjectName" type="text" placeholder="New subject (e.g. Biology)" required style="flex:1;" />
+        <button type="submit" class="btn btn-quiet" style="flex:0 0 auto;">${icon('plus')}Add Subject</button>
+      </form>
+      <div class="subject-chip-row">
+        ${state.subjects.map(s => {
+          const count = getSubjectChapters(s).length;
+          const removable = state.subjects.length > 1;
+          return `<span class="subject-chip">
+            <span>${esc(s)}</span>
+            <span class="subject-chip-count">${count}</span>
+            ${removable ? `<button type="button" class="subject-chip-remove" data-action="remove-subject" data-id="${esc(s)}" aria-label="Remove ${esc(s)}">${icon('x')}</button>` : ""}
+          </span>`;
+        }).join("")}
+      </div>
+    </div>
+
+    <div class="filter-row">
+      ${filters.map(f => `<button class="filter-pill ${state.syllabusFilter===f?'active':''}" data-action="set-filter" data-value="${esc(f)}">${esc(f)}</button>`).join("")}
+    </div>
+
+    <div>
+      ${visible.map(chapter => chapterTemplate(chapter)).join("")}
+      ${visible.length===0 ? `<p class="empty empty-dashed">No chapters here yet. Add one above to start tracking lectures and homework.</p>` : ""}
+    </div>
+  </div>`;
+}
+
+function chapterTemplate(chapter){
+  const isOpen = state.openChapters.has(chapter.id);
+  const chapterLectures = state.lectures.filter(l => l.chapterId === chapter.id);
+  return `
+  <div class="chapter">
+    <div class="chapter-head" data-action="toggle-chapter" data-id="${chapter.id}">
+      <div>
+        <p class="chapter-title">${esc(chapter.title)}</p>
+        <p class="chapter-sub">${chapterLectures.length} lecture${chapterLectures.length===1?'':'s'} · ${getChapterStudyHours(chapter.id).toFixed(1)}h lifetime study · ${getChapterRevisionCount(chapter.id)}/${getRevisionTarget(chapter)} revisions</p>
+      </div>
+      <div class="chapter-actions">
+        <button class="btn-icon" data-action="delete-chapter" data-id="${chapter.id}" data-stop="1" aria-label="Delete chapter">${icon('trash')}</button>
+        <span class="chevron ${isOpen?'open':''}">${icon('chevronDown')}</span>
+      </div>
+    </div>
+    ${isOpen ? `
+    <div class="chapter-body">
+      <div style="margin-bottom:18px;">
+        <label class="field-label">Chapter Future Notes &amp; Reminders</label>
+        <textarea class="field" data-notes-for="${chapter.id}" placeholder="Add specific formulas to memorize, concepts you keep forgetting, or tips for this chapter...">${esc(chapter.notes)}</textarea>
+      </div>
+      <div class="chapter-study-strip" style="margin-bottom:14px;">
+        <div><span>Lifetime study</span><strong>${getChapterStudyHours(chapter.id).toFixed(2)}h</strong></div>
+        <div><span>Revision done</span><strong>${getChapterRevisionCount(chapter.id)}</strong></div>
+        <label><span>Revision target</span><input class="field chapter-target-input" data-revision-target-for="${chapter.id}" type="number" min="1" step="1" value="${getRevisionTarget(chapter)}" /></label>
+      </div>
+      <div style="margin-bottom:14px;">
+        <h4 style="font-size:13px;font-weight:700;border-bottom:1px solid var(--border);padding-bottom:8px;margin:0 0 4px;">Lectures Timeline</h4>
+        ${chapterLectures.length===0 ? `<p class="empty" style="text-align:left;padding:10px 0;">No lectures recorded yet.</p>` : ""}
+        ${chapterLectures.map(l => lectureTemplate(l)).join("")}
+      </div>
+      <form data-form="add-lecture" data-chapter-id="${chapter.id}" class="panel row" style="align-items:center;">
+        <input class="field" name="title" type="text" placeholder="New lecture title..." required style="flex:2;" />
+        <input class="field" name="date" type="date" style="flex:1;" />
+        <button type="submit" class="btn btn-primary" style="flex:0 0 auto;">${icon('plus')}Lecture</button>
+      </form>
+    </div>` : ""}
+  </div>`;
+}
+
+function lectureTemplate(lecture){
+  const hws = state.homeworks.filter(h => h.lectureId === lecture.id);
+  const comfortClass = lecture.comfort ? "comfort-" + lecture.comfort : "comfort-empty";
+  return `
+  <div class="lecture">
+    <div class="lecture-top">
+      <div>
+        <p class="lecture-title">${esc(lecture.title)}</p>
+        <p class="lecture-date">Date: ${lecture.date || "Not set"}</p>
+        <button type="button" class="chip ${lecture.completed ? 'chip-sage' : 'chip-ochre'}" style="margin-top:7px;border:none;cursor:pointer;" data-action="toggle-lecture-status" data-id="${lecture.id}">
+          ${icon(lecture.completed ? 'check' : 'clock')}${lecture.completed ? 'Completed' : 'Pending'}
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="position:relative;">
+          <select class="comfort-select ${comfortClass}" data-comfort-for="${lecture.id}">
+            <option value="" ${!lecture.comfort?'selected':''}>Set Level</option>
+            <option value="A" ${lecture.comfort==='A'?'selected':''}>A - Strong</option>
+            <option value="B" ${lecture.comfort==='B'?'selected':''}>B - Revise</option>
+            <option value="C" ${lecture.comfort==='C'?'selected':''}>C - Weak</option>
+          </select>
+          <span style="position:absolute;right:7px;top:50%;transform:translateY(-50%);pointer-events:none;width:13px;height:13px;display:inline-flex;">${icon('chevronDown')}</span>
+        </div>
+        <button class="btn-icon" data-action="delete-lecture" data-id="${lecture.id}" aria-label="Delete lecture">${icon('trash')}</button>
+      </div>
+    </div>
+    <div class="panel">
+      <p class="field-label" style="margin-bottom:8px;">Homework Assignments</p>
+      <div class="hw-list">
+        ${hws.map(hw => `
+          <div class="hw-item">
+            <input type="checkbox" ${hw.completed?'checked':''} data-toggle-hw="${hw.id}" />
+            <span class="${hw.completed?'done':''}">${esc(hw.title)}</span>
+            <button class="btn-icon" style="padding:4px;" data-action="delete-homework" data-id="${hw.id}" aria-label="Delete homework">${icon('trash')}</button>
+          </div>`).join("")}
+        ${hws.length===0 ? `<p class="empty" style="text-align:left;padding:0;font-style:italic;">No homework added yet.</p>` : ""}
+      </div>
+      <form data-form="add-homework" data-lecture-id="${lecture.id}" class="row">
+        <input class="field" name="title" type="text" placeholder="Add HW (e.g. HCV Q1-15)..." style="flex:2;" />
+        <button type="submit" class="btn btn-quiet" style="flex:0 0 auto;">Add</button>
+      </form>
+    </div>
+  </div>`;
+}
+
+function plannerTemplate(){
+  const totalHours = getTotalHours();
+  const streak = getStreak();
+  const elapsed = state.timerRunning ? Math.max(0, Math.floor((Date.now()-state.timerStartedAt)/1000)) : 0;
+  return `
+  <div class="grid-2">
+    <div class="card" style="display:flex;flex-direction:column;">
+      <h2 class="section-title" style="color:var(--ink);">${icon('checkSquare','icon-lg')}Daily To-Do List</h2>
+      <form data-form="add-todo" class="panel stack" style="margin-bottom:16px;">
+        <input class="field" name="text" type="text" placeholder="Add a new task..." required />
+        <div class="row">
+          <select class="field" name="subject"><option value="">General Task</option>${state.subjects.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("")}</select>
+          <input class="field" name="date" type="date" required value="${todayStr()}" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">${icon('plus')}Add Task</button>
+      </form>
+      <div class="list scroll-list">
+        ${state.todos.map(t => `
+          <div class="todo-row">
+            <input type="checkbox" ${t.completed?'checked':''} data-toggle-todo="${t.id}" />
+            <div style="flex:1;min-width:0;">
+              <p class="todo-text ${t.completed?'done':''}">${esc(t.text)}</p>
+              <div class="todo-tags">
+                ${t.subject ? `<span class="chip chip-neutral">${esc(t.subject)}</span>` : ""}
+                ${t.date ? `<span class="chip chip-neutral" style="background:none;padding-left:0;">Due: ${t.date}</span>` : ""}
+              </div>
+            </div>
+            <button class="btn-icon" data-action="delete-todo" data-id="${t.id}" aria-label="Delete task">${icon('trash')}</button>
+          </div>`).join("")}
+        ${state.todos.length===0 ? `<p class="empty">No tasks pending. Great job!</p>` : ""}
+      </div>
+    </div>
+
+    <div class="card" style="display:flex;flex-direction:column;">
+      <h2 class="section-title">${icon('clock','icon-lg')}Study Logs
+        <span class="chip ${streak>0?'chip-ochre':'chip-neutral'}" style="margin-left:auto;">${icon('flame')}${streak} day streak</span>
+        <span class="chip chip-accent">${totalHours.toFixed(1)}h total</span>
+      </h2>
+
+      <div class="panel timer-config" style="margin-bottom:10px;">
+        <div>
+          <p class="field-label">Timer Session Tags</p>
+          <div class="row">
+            <select class="field" data-timer-type ${state.timerRunning?'disabled':''}>
+              <option value="Study" ${state.timerType==='Study'?'selected':''}>Study</option>
+              <option value="Revision" ${state.timerType==='Revision'?'selected':''}>Revision</option>
+            </select>
+            <select class="field" data-timer-subject ${state.timerRunning?'disabled':''}>
+              <option value="">Select subject</option>
+              ${state.subjects.map(subject => `<option value="${esc(subject)}" ${state.timerSubject===subject?'selected':''}>${esc(subject)}</option>`).join("")}
+            </select>
+            <select class="field" data-timer-chapter ${state.timerRunning?'disabled':''}>
+              <option value="">Select chapter</option>
+              ${getSubjectChapters(state.timerSubject).map(c => `<option value="${c.id}" ${state.timerChapterId===c.id?'selected':''}>${esc(c.title)}</option>`).join("")}
+            </select>
+          </div>
+          ${state.timerType==='Revision' ? `<p class="timer-tag-note">This session will count as one revision for the selected chapter.</p>` : `<p class="timer-tag-note">This session will count toward the chapter's lifetime study time.</p>`}
+        </div>
+      </div>
+
+      <div class="panel timer-card" style="margin-bottom:16px;">
+        <div>
+          <p class="timer-label">${state.timerType} Timer</p>
+          <p class="timer-value" id="timerDisplay">${formatDuration(elapsed)}</p>
+        </div>
+        <button type="button" class="btn ${state.timerRunning?'btn-danger':'btn-sage'}" data-action="timer-toggle">
+          ${state.timerRunning ? icon('stop') : icon('play')}${state.timerRunning?'Stop':'Start'}
+        </button>
+      </div>
+
+      <form data-form="add-log" class="panel stack" style="margin-bottom:16px;">
+        <div class="row">
+          <input class="field" name="date" type="date" required value="${todayStr()}" />
+          <input class="field" name="hours" type="number" step="0.1" min="0" placeholder="Hours (e.g. 2.5)" required />
+        </div>
+        <input class="field" name="notes" type="text" placeholder="What did you study? (optional)" />
+        <button type="submit" class="btn btn-primary btn-full">Log Hours</button>
+      </form>
+
+      <div class="list scroll-list">
+        ${state.studyLogs.slice().reverse().map(log => `
+          <div class="log-row">
+            <div class="log-top">
+              <span>${log.date}</span>
+              ${log.source==='timer' ? `<span class="chip chip-sage">${icon('clock')}timer</span>` : ""}
+              ${log.sessionType ? `<span class="chip ${log.sessionType==='Revision'?'chip-ochre':'chip-accent'}">${esc(log.sessionType)}</span>` : ""}
+              ${log.subject ? `<span class="chip chip-neutral">${esc(log.subject)}</span>` : ""}
+              <span class="chip chip-accent" style="margin-left:auto;">${log.hours.toFixed(2)}h</span>
+              <button class="btn-icon" style="padding:4px;" data-action="delete-log" data-id="${log.id}" aria-label="Delete study log">${icon('trash')}</button>
+            </div>
+            ${log.chapterId && state.chapters.find(c => c.id===log.chapterId) ? `<p class="log-notes">Chapter: ${esc(state.chapters.find(c => c.id===log.chapterId).title)}</p>` : ""}
+            ${log.notes && !log.chapterId ? `<p class="log-notes">${esc(log.notes)}</p>` : ""}
+          </div>`).join("")}
+        ${state.studyLogs.length===0 ? `<p class="empty">No study sessions logged yet.</p>` : ""}
+      </div>
+    </div>
+  </div>`;
+}
+
+function revisionTemplate(){
+  const revisionLogs = state.studyLogs.filter(l => l.sessionType === "Revision");
+  const revisionHours = revisionLogs.reduce((s,l) => s + l.hours, 0);
+  const totalTarget = state.chapters.reduce((s,c) => s + getRevisionTarget(c), 0);
+  const totalDone = state.chapters.reduce((s,c) => s + getChapterRevisionCount(c.id), 0);
+  const totalPending = Math.max(0, totalTarget - totalDone);
+
+  return `
+  <div class="space-y">
+    <div class="card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+          <p class="eyebrow">REVISION DASHBOARD</p>
+          <h2 class="section-title" style="margin-bottom:6px;">Track revision cycles by subject and chapter</h2>
+          <p style="margin:0;color:var(--ink-faint);font-size:12.5px;">Each Revision timer session counts as one completed revision. Multiple sessions for the same chapter are retained.</p>
+        </div>
+        <div class="revision-summary">
+          <div><span>Done</span><strong>${totalDone}</strong></div>
+          <div><span>Pending</span><strong>${totalPending}</strong></div>
+          <div><span>Time</span><strong>${revisionHours.toFixed(1)}h</strong></div>
+        </div>
+      </div>
+    </div>
+
+    ${state.subjects.map(subject => {
+      const chapters = getSubjectChapters(subject);
+      const done = chapters.reduce((s,c) => s + getChapterRevisionCount(c.id), 0);
+      const target = chapters.reduce((s,c) => s + getRevisionTarget(c), 0);
+      const pending = Math.max(0, target - done);
+      const hours = chapters.reduce((s,c) => s + getChapterRevisionHours(c.id), 0);
+      return `
+      <div class="card revision-subject-card">
+        <div class="revision-subject-head">
+          <div>
+            <p class="revision-subject-title">${esc(subject)}</p>
+            <p class="revision-subject-sub">${done} done · ${pending} pending · ${hours.toFixed(1)}h revision time</p>
+          </div>
+          <span class="chip ${pending===0 && chapters.length ? 'chip-sage':'chip-ochre'}">${done}/${target || 0} cycles</span>
+        </div>
+        ${chapters.length ? `<div class="revision-table">
+          ${chapters.map(chapter => {
+            const cDone = getChapterRevisionCount(chapter.id);
+            const cTarget = getRevisionTarget(chapter);
+            const cPending = Math.max(0, cTarget - cDone);
+            const cHours = getChapterRevisionHours(chapter.id);
+            const pct = Math.min(100, Math.round((cDone / cTarget) * 100));
+            return `
+            <div class="revision-row">
+              <div style="min-width:0;flex:1;">
+                <div class="revision-row-title">${esc(chapter.title)}</div>
+                <div class="revision-meta">${cDone} completed · ${cPending} pending · ${cHours.toFixed(2)}h revision time</div>
+                <div class="progress-track" style="margin-top:7px;height:6px;"><div class="progress-fill ${cPending===0?'met':''}" style="width:${pct}%"></div></div>
+              </div>
+              <div class="revision-count">${cDone}/${cTarget}</div>
+            </div>`;
+          }).join("")}
+        </div>` : `<p class="empty" style="text-align:left;padding:14px 0 0;">No chapters added for this subject.</p>`}
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
+function testsTemplate(){
+  const chartData = state.tests.slice().sort((a,b) => a.date.localeCompare(b.date));
+  const sortedDesc = state.tests.slice().sort((a,b) => b.date.localeCompare(a.date));
+  const draftSubjects = state.testDraftSubjects && state.testDraftSubjects.length
+    ? state.testDraftSubjects.filter(s => state.subjects.includes(s))
+    : state.subjects.slice(0, Math.min(3, state.subjects.length));
+  const availableToAdd = state.subjects.filter(s => !draftSubjects.includes(s));
+  const chipColors = ["chip-accent","chip-sage","chip-ochre","chip-rust"];
+  return `
+  <div class="space-y">
+    <div class="card">
+      <h2 class="section-title">${icon('target','icon-lg')}Log a Test Score</h2>
+      <form data-form="add-test" class="stack" style="gap:14px;">
+        <div class="row" style="row-gap:10px;">
+          <input class="field" name="name" type="text" placeholder="Test name (e.g. AITS 3)" required style="flex:1 1 200px;" />
+          <input class="field" name="date" type="date" required value="${todayStr()}" style="flex:1 1 150px;" />
+          <input class="field" name="percentile" type="number" min="0" max="100" step="0.01" placeholder="Overall percentile (optional)" style="flex:1 1 200px;" />
+        </div>
+
+        <div>
+          <p class="field-label">Subjects in this test</p>
+          <div class="test-subject-rows">
+            ${draftSubjects.length === 0 ? `<p class="empty" style="padding:10px 0;">Add at least one subject below.</p>` : draftSubjects.map((s,i) => `
+              <div class="test-subject-row">
+                <span class="chip ${chipColors[i % chipColors.length]}" style="min-width:auto;">${esc(s)}</span>
+                <input class="field" type="number" min="0" step="0.5" placeholder="Marks scored" name="score__${i}" data-subject-name="${esc(s)}" style="flex:1;" />
+                <span class="test-subject-slash">/</span>
+                <input class="field" type="number" min="1" step="1" placeholder="Full marks" name="max__${i}" value="100" style="flex:0 0 100px;" />
+                <button type="button" class="btn-icon" data-action="remove-test-subject" data-id="${esc(s)}" aria-label="Remove ${esc(s)} from this test">${icon('x')}</button>
+              </div>`).join("")}
+          </div>
+          ${availableToAdd.length > 0 ? `
+          <div class="test-subject-add">
+            <select class="field" id="testSubjectPicker" style="flex:1;">
+              ${availableToAdd.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("")}
+            </select>
+            <button type="button" class="btn btn-quiet" data-action="add-test-subject">${icon('plus')}Add Subject</button>
+          </div>` : ""}
+          <p class="test-subject-hint">Each subject can carry its own full marks, so weighting doesn't have to be equal across subjects.</p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" ${draftSubjects.length===0 ? 'disabled' : ''}>Add Test</button>
+      </form>
+    </div>
+
+    ${chartData.length > 0 ? `
+    <div class="card">
+      <p class="eyebrow">SUBJECT SCORE PROGRESSION (% OF FULL MARKS)</p>
+      <div class="test-chart-wrap">${lineChartSVG(chartData)}</div>
+    </div>` : ""}
+
+    ${chartData.some(t => Number.isFinite(t.percentile)) ? `
+    <div class="card">
+      <p class="eyebrow">PERCENTILE PROGRESSION</p>
+      <p class="test-subject-hint" style="margin:-8px 0 12px;">Grouped by tests covering the same set of subjects, since percentile is only comparable within the same test pattern.</p>
+      <div class="test-chart-wrap">${percentileChartSVG(chartData)}</div>
+    </div>` : ""}
+
+    <div class="list">
+      ${sortedDesc.map(t => {
+        const subjects = getTestSubjects(t);
+        const total = getTestTotal(t);
+        const max = getTestMax(t);
+        const pct = max > 0 ? ((total/max)*100).toFixed(0) : 0;
+        return `
+        <div class="test-row">
+          <div>
+            <p class="test-name">${esc(t.name)}</p>
+            <p class="test-date">${t.date}</p>
+            <div class="test-tags">
+              ${subjects.map((s,i) => `<span class="chip ${chipColors[i % chipColors.length]}">${esc(s)}: ${Number(t.scores[s].score)||0}/${Number(t.scores[s].max)||0}</span>`).join("")}
+              ${Number.isFinite(t.percentile) ? `<span class="chip chip-neutral">Percentile: ${t.percentile}</span>` : ""}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;">
+            <div>
+              <p class="test-score">${total}<span>/${max}</span></p>
+              <p class="test-pct">${pct}%</p>
+            </div>
+            <button class="btn-icon" data-action="delete-test" data-id="${t.id}" aria-label="Delete test">${icon('trash')}</button>
+          </div>
+        </div>`;
+      }).join("")}
+      ${state.tests.length===0 ? `<p class="empty empty-dashed">No tests logged yet. Add a score above to track your progression.</p>` : ""}
+    </div>
+  </div>`;
+}
+
+function communityTemplate(){
+  const c = state.community;
+  const groups = c.groups;
+
+  const joinForm = `
+      <div class="card">
+        <h2 class="section-title">${icon('users','icon-lg')}${groups.length ? 'Join Another Group' : 'Join a Study Group'}</h2>
+        <p class="eyebrow" style="margin-bottom:16px;font-weight:500;font-size:13px;">Pick a display name and a group code. Anyone who joins with the same code lands in the same group. There is no separate "create" step — the first person to use a code starts the group; share that code to bring others in. You can join as many groups as you like.</p>
+        <form data-form="join-community" class="stack">
+          <input class="field" name="displayName" type="text" placeholder="Your display name" maxlength="24" required />
+          <input class="field" name="groupCode" type="text" placeholder="Group code (e.g. JEE2027A)" maxlength="24" required />
+          <button type="submit" class="btn btn-primary btn-full">Join Group</button>
+        </form>
+      </div>`;
+
+  if (groups.length === 0){
+    return `<div class="space-y">${joinForm}</div>`;
+  }
+
+  const active = getGroup(state.activeGroupCode) || groups[0];
+  const selfKey = communityMemberKey(active.groupCode);
+  const weekLabel = `Week of ${isoWeekKey(todayStr())}`;
+  const members = active.members || [];
+
+  const groupTabs = groups.length > 1 ? `
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      ${groups.map(g => `<button type="button" class="tab-pill ${g.groupCode === active.groupCode ? 'active' : ''}" data-action="set-active-group" data-id="${esc(g.groupCode)}">${esc(g.groupCode)}</button>`).join("")}
+    </div>` : "";
+
+  return `
+  <div class="space-y">
+    ${groupTabs}
+    <div class="card">
+      <div class="row" style="align-items:center;justify-content:space-between;">
+        <div>
+          <p class="eyebrow" style="margin-bottom:4px;">Group Code</p>
+          <p style="font-family:var(--font-serif);font-size:20px;">${esc(active.groupCode)}</p>
+        </div>
+        <div class="row" style="gap:8px;flex:none;">
+          <button class="btn btn-quiet" data-action="refresh-community" data-id="${esc(active.groupCode)}">${icon('clock')}Refresh</button>
+          <button class="btn btn-danger" data-action="leave-community" data-id="${esc(active.groupCode)}">Leave</button>
+        </div>
+      </div>
+      <form data-form="update-display-name" data-group="${esc(active.groupCode)}" class="row" style="margin-top:14px;">
+        <input class="field" name="displayName" type="text" value="${esc(active.displayName)}" maxlength="24" placeholder="Your display name" />
+        <button type="submit" class="btn btn-quiet" style="flex:none;">Save Name</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">${icon('target','icon-lg')}Weekly Leaderboard</h2>
+      <p class="eyebrow" style="margin-bottom:14px;">${weekLabel} — ranked by hours studied this week.</p>
+      ${active.loading ? `<p class="empty">Loading leaderboard…</p>` : ""}
+      ${active.error ? `<p class="empty" style="color:var(--rust);">${esc(active.error)}</p>` : ""}
+      ${!active.loading && !active.error ? `
+      <div class="list">
+        ${members.length === 0 ? `<p class="empty empty-dashed">No members found yet. Share the group code so others can join.</p>` : members.map((m,i) => `
+          <div class="log-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;${m.id===selfKey ? 'border-color:var(--accent);' : ''}">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="chip ${i===0 ? 'chip-ochre' : 'chip-neutral'}" style="min-width:26px;justify-content:center;">${i+1}</span>
+              <div>
+                <p style="font-weight:600;">${esc(m.displayName || "Unnamed")}${m.id===selfKey ? ' <span style="color:var(--ink-faint);font-weight:400;">(you)</span>' : ''}</p>
+                <p class="log-notes">Total: ${Number(m.total_hours||0).toFixed(1)}h</p>
+              </div>
+            </div>
+            <p class="stat-value" style="font-size:20px;">${Number(m.currentWeekHours||0).toFixed(1)}h</p>
+          </div>
+        `).join("")}
+      </div>` : ""}
+    </div>
+
+    ${joinForm}
+  </div>`;
+}
+
+/* ============================ main render ============================ */
+function renderMain(){
+  renderNav();
+  const main = document.getElementById("main");
+  if (state.tab === "dashboard") main.innerHTML = dashboardTemplate();
+  else if (state.tab === "syllabus") main.innerHTML = syllabusTemplate();
+  else if (state.tab === "planner") main.innerHTML = plannerTemplate();
+  else if (state.tab === "revision") main.innerHTML = revisionTemplate();
+  else if (state.tab === "tests") main.innerHTML = testsTemplate();
+  else if (state.tab === "community") main.innerHTML = communityTemplate();
+}
+
+/* ============================ events ============================ */
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+  const action = btn.dataset.action, id = btn.dataset.id, value = btn.dataset.value;
+  if (btn.dataset.stop) e.stopPropagation();
+  switch(action){
+    case "set-tab":
+      state.tab = value; persistState(); renderMain();
+      if (value === "community" && state.activeGroupCode) refreshLeaderboard(state.activeGroupCode);
+      break;
+    case "set-active-group": state.activeGroupCode = id; persistState(); renderMain(); refreshLeaderboard(id); break;
+    case "refresh-community": refreshLeaderboard(id); break;
+    case "leave-community": leaveCommunityGroup(id); break;
+    case "set-filter": state.syllabusFilter = value; persistState(); renderMain(); break;
+    case "toggle-chapter": state.openChapters.has(id) ? state.openChapters.delete(id) : state.openChapters.add(id); persistState(); renderMain(); break;
+    case "delete-chapter": deleteChapter(id); persistState(); renderMain(); break;
+    case "remove-subject": removeSubject(id); persistState(); renderMain(); break;
+    case "delete-lecture": deleteLecture(id); persistState(); renderMain(); break;
+    case "toggle-lecture-status": toggleLectureStatus(id); persistState(); renderMain(); break;
+    case "delete-homework": deleteHomework(id); persistState(); renderMain(); break;
+    case "delete-todo": deleteTodo(id); persistState(); renderMain(); break;
+    case "delete-log": deleteStudyLog(id); persistState(); renderMain(); break;
+    case "delete-test": deleteTest(id); persistState(); renderMain(); break;
+    case "add-test-subject": {
+      const picker = document.getElementById("testSubjectPicker");
+      const subject = picker && picker.value;
+      if (subject){
+        const current = state.testDraftSubjects && state.testDraftSubjects.length
+          ? state.testDraftSubjects.filter(s => state.subjects.includes(s))
+          : state.subjects.slice(0, Math.min(3, state.subjects.length));
+        if (!current.includes(subject)) current.push(subject);
+        state.testDraftSubjects = current;
+      }
+      renderMain();
+      break;
+    }
+    case "remove-test-subject": {
+      const current = state.testDraftSubjects && state.testDraftSubjects.length
+        ? state.testDraftSubjects.filter(s => state.subjects.includes(s))
+        : state.subjects.slice(0, Math.min(3, state.subjects.length));
+      state.testDraftSubjects = current.filter(s => s !== id);
+      renderMain();
+      break;
+    }
+    case "edit-goal": state.editingGoal = true; renderMain(); break;
+    case "toggle-chart-series":
+      state.chartHiddenSeries.has(id) ? state.chartHiddenSeries.delete(id) : state.chartHiddenSeries.add(id);
+      persistState(); renderMain();
+      break;
+    case "toggle-percentile-series":
+      state.chartHiddenPercentileSeries.has(id) ? state.chartHiddenPercentileSeries.delete(id) : state.chartHiddenPercentileSeries.add(id);
+      persistState(); renderMain();
+      break;
+    case "timer-toggle": state.timerRunning ? stopTimer() : startTimer(); persistState(); renderMain(); break;
+    case "toggle-settings":
+      state.settingsOpen = !state.settingsOpen;
+      renderMain();
+      break;
+    case "toggle-theme":
+      const themes = ["light", "dark", "amoled"];
+      const currentIndex = themes.indexOf(state.theme);
+      state.theme = themes[(currentIndex + 1) % themes.length];
+      document.documentElement.setAttribute("data-theme", state.theme);
+      persistState();
+      renderMain();
+      break;
+    case "save-app-name": {
+      const input = document.getElementById("appNameInput");
+      if (input && updateAppName(input.value)) {
+        persistState();
+        renderMain();
+      }
+      break;
+    }
+  }
+});
+
+document.addEventListener("click", (e) => {
+  if (!state.settingsOpen) return;
+  const path = typeof e.composedPath === "function" ? e.composedPath() : [e.target];
+  const panel = document.getElementById("settingsPanel");
+  const sidebarBtn = document.getElementById("sidebarSettingsToggle");
+  const topbarBtn = document.getElementById("topbarSettingsToggle");
+  const clickedTrigger = path.includes(sidebarBtn) || path.includes(topbarBtn);
+  const clickedInsidePanel = path.includes(panel);
+  if (clickedTrigger || clickedInsidePanel) return;
+  state.settingsOpen = false;
+  renderMain();
+}, true);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && state.settingsOpen){ state.settingsOpen = false; renderMain(); }
+});
+
+document.addEventListener("change", (e) => {
+  const el = e.target;
+  if (el.dataset.toggleTodo){ toggleTodo(el.dataset.toggleTodo); persistState(); renderMain(); }
+  else if (el.dataset.toggleHw){ toggleHomework(el.dataset.toggleHw); persistState(); renderMain(); }
+  else if (el.dataset.comfortFor){ updateLectureComfort(el.dataset.comfortFor, el.value); persistState(); renderMain(); }
+  else if (el.dataset.revisionTargetFor){ updateChapterRevisionTarget(el.dataset.revisionTargetFor, el.value); persistState(); renderMain(); }
+  else if (el.hasAttribute("data-timer-type")){ state.timerType = el.value === "Revision" ? "Revision" : "Study"; persistState(); renderMain(); }
+  else if (el.hasAttribute("data-timer-subject")){ state.timerSubject = el.value; syncTimerChapterForSubject(); persistState(); renderMain(); }
+  else if (el.hasAttribute("data-timer-chapter")){ state.timerChapterId = el.value; persistState(); }
+});
+
+document.addEventListener("input", (e) => {
+  const el = e.target;
+  if (el.dataset.notesFor){ updateChapterNotes(el.dataset.notesFor, el.value); persistState(); }
+});
+
+document.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const kind = form.dataset.form;
+  if (!kind) return;
+  const fd = new FormData(form);
+  if (kind === "add-todo") addTodo(fd.get("text"), fd.get("subject"), fd.get("date"));
+  else if (kind === "add-log") addStudyLog(fd.get("date"), fd.get("hours"), fd.get("notes"));
+  else if (kind === "add-chapter") addChapter(fd.get("subject"), fd.get("title"));
+  else if (kind === "add-subject") addSubject(fd.get("subjectName"));
+  else if (kind === "add-lecture"){ addLecture(form.dataset.chapterId, fd.get("title"), fd.get("date")); state.openChapters.add(form.dataset.chapterId); }
+  else if (kind === "add-homework") addHomework(form.dataset.lectureId, fd.get("title"));
+  else if (kind === "add-test"){
+    const draftSubjects = state.testDraftSubjects && state.testDraftSubjects.length
+      ? state.testDraftSubjects.filter(s => state.subjects.includes(s))
+      : state.subjects.slice(0, Math.min(3, state.subjects.length));
+    if (draftSubjects.length === 0){
+      alert("Add at least one subject to this test.");
+      return;
+    }
+    const scores = {};
+    let valid = true;
+    draftSubjects.forEach((s,i) => {
+      const score = Number(fd.get("score__" + i));
+      const max = Number(fd.get("max__" + i));
+      if (!Number.isFinite(max) || max <= 0) valid = false;
+      if (!Number.isFinite(score) || score < 0 || score > max) valid = false;
+      scores[s] = { score, max };
+    });
+    const percentileRaw = (fd.get("percentile") || "").toString().trim();
+    let percentile = null;
+    if (percentileRaw !== ""){
+      const p = Number(percentileRaw);
+      if (!Number.isFinite(p) || p < 0 || p > 100) valid = false;
+      else percentile = p;
+    }
+    if (!valid){
+      alert("Enter valid scores and full marks for every subject (score between 0 and that subject's full marks), and a percentile between 0 and 100 if provided.");
+      return;
+    }
+    addTest({ name:(fd.get("name")||"").trim(), date:fd.get("date"), percentile, scores });
+    state.testDraftSubjects = null;
+  }
+  else if (kind === "save-goal"){ const v = parseFloat(fd.get("goal")); if (!isNaN(v) && v>0) state.dailyGoal = v; state.editingGoal = false; }
+  else if (kind === "join-community"){ joinCommunityGroup(fd.get("groupCode"), fd.get("displayName")); }
+  else if (kind === "update-display-name"){ updateCommunityDisplayName(form.dataset.group, fd.get("displayName")); }
+  persistState();
+  renderMain();
+});
+
+window.addEventListener("pagehide", persistState);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") persistState();
+  else if (state.timerRunning) {
+    recordTimerUntilNow();
+    renderMain();
+  }
+});
+
+/* live timer tick (updates only the visible timer display, no full re-render) */
+setInterval(() => {
+  if (state.timerRunning){
+    const el = document.getElementById("timerDisplay");
+    if (el) el.textContent = formatDuration(Math.max(0, Math.floor((Date.now()-state.timerStartedAt)/1000)));
+  }
+}, 1000);
+
+initSupabase();
+document.documentElement.setAttribute("data-theme", state.theme);
+document.title = state.appName;
+renderMain();
+
+// Sync already-joined communities after the initial render.
+if (state.community.groups.length > 0 && supabase) {
+  ensureSupabaseAuth().then(ready => {
+    if (!ready) return;
+    Promise.all(state.community.groups.map(g => pushCommunityStats(g.groupCode))).then(() => {
+      if (state.activeGroupCode) refreshLeaderboard(state.activeGroupCode);
+    });
+  });
+}
+</script>
+</body>
+</html>
